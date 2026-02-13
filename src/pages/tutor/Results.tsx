@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Trophy, Target, Zap, AlertTriangle, TrendingUp, Calendar, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
+import { calculateOMI } from '../../utils/omi';
 
 export default function Results() {
   const { profile } = useAuth();
@@ -49,6 +50,15 @@ export default function Results() {
       percentage: Math.round(data.total / data.count)
     }));
 
+    // Calculate OMI based on latest attempts
+    const latestByCategory: Record<string, any> = {};
+    attempts.forEach(a => {
+      if (!latestByCategory[a.category_id] || new Date(a.completed_at) > new Date(latestByCategory[a.category_id].completed_at)) {
+        latestByCategory[a.category_id] = a;
+      }
+    });
+    const omi = calculateOMI(Object.values(latestByCategory));
+
     const sortedCats = [...chartData].sort((a, b) => b.percentage - a.percentage);
     const strongest = sortedCats[0];
     const weakest = sortedCats[sortedCats.length - 1];
@@ -59,6 +69,7 @@ export default function Results() {
       highestScore: Math.round(highestScore),
       strongest,
       weakest,
+      omi,
       chartData
     };
   }, [attempts]);
@@ -100,10 +111,11 @@ export default function Results() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="p-2 bg-blue-50 text-blue-600 w-fit rounded-lg mb-4">
-            <Calendar className="w-5 h-5" />
+            <Zap className="w-5 h-5" />
           </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Tests</p>
-          <p className="text-3xl font-black text-slate-900">{stats.totalTests}</p>
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">OMI Index</p>
+          <p className="text-3xl font-black text-slate-900">{stats.omi || 'N/A'}%</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{stats.totalTests} Tests Taken</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">

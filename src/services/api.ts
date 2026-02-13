@@ -1,16 +1,21 @@
 import { supabase } from '../lib/supabase';
-import { Category, Question, Attempt, Answer } from '../types';
+import { Category, Question, Attempt, Answer, User } from '../types';
+import { calculateOMI } from '../utils/omi';
 
 export const api = {
   // Categories
   getCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*')
+      .select('*, questions(count)')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data as Category[];
+    // Map the nested count object to a flat property for easier UI usage
+    return (data as any[]).map(cat => ({
+      ...cat,
+      question_count: cat.questions?.[0]?.count || 0
+    })) as (Category & { question_count: number })[];
   },
 
   createCategory: async (name: string, description: string, published: boolean = false) => {
@@ -37,6 +42,16 @@ export const api = {
   },
 
   deleteCategory: async (id: string) => {
+    // Check if category has attempts
+    const { count } = await supabase
+      .from('attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', id);
+
+    if (count && count > 0) {
+      throw new Error('This category has existing tutor attempts and cannot be deleted. Unpublish it instead.');
+    }
+
     const { error } = await supabase
       .from('categories')
       .delete()
@@ -50,7 +65,8 @@ export const api = {
     const { data, error } = await supabase
       .from('questions')
       .select('*')
-      .eq('category_id', categoryId);
+      .eq('category_id', categoryId)
+      .order('created_at', { ascending: true });
     
     if (error) throw error;
     return data as Question[];
@@ -67,6 +83,54 @@ export const api = {
     return data as Question;
   },
 
+  updateQuestion: async (id: string, updates: Partial<Question>) => {
+    // Safe Type Switching Logic
+    const finalUpdates = { ...updates };
+    
+    if (updates.question_type === 'multiple_choice') {
+      // Clean short_answer fields
+      (finalUpdates as any).min_word_count = 0;
+      (finalUpdates as any).expected_keywords = [];
+      (finalUpdates as any).max_score = 10;
+    } else if (updates.question_type === 'short_answer') {
+      // Clean MC fields
+      (finalUpdates as any).option_a = null;
+      (finalUpdates as any).option_b = null;
+      (finalUpdates as any).option_c = null;
+      (finalUpdates as any).option_d = null;
+      (finalUpdates as any).correct_option = null;
+    }
+
+    const { data, error } = await supabase
+      .from('questions')
+      .update(finalUpdates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Question;
+  },
+
+  deleteQuestion: async (id: string) => {
+    // Prevention logic: check if question was used in an attempt
+    const { count } = await supabase
+      .from('answers')
+      .select('*', { count: 'exact', head: true })
+      .eq('question_id', id);
+
+    if (count && count > 0) {
+      throw new Error('This question has been answered in past attempts and cannot be deleted. You can edit the text instead.');
+    }
+
+    const { error } = await supabase
+      .from('questions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
   // Attempts & Answers
   submitAttempt: async (attempt: Omit<Attempt, 'id' | 'completed_at'>, answers: Omit<Answer, 'id' | 'attempt_id'>[]) => {
     const { data: attemptData, error: attemptError } = await supabase
@@ -78,8 +142,13 @@ export const api = {
     if (attemptError) throw attemptError;
 
     const answersToInsert = answers.map(ans => ({
-      ...ans,
-      attempt_id: attemptData.id
+      attempt_id: attemptData.id,
+      question_id: ans.question_id,
+      selected_option: ans.selected_option,
+      text_response: ans.text_response,
+      score: ans.score,
+      matched_keywords: ans.matched_keywords,
+      is_correct: ans.is_correct
     }));
 
     const { error: answersError } = await supabase
@@ -105,7 +174,64 @@ export const api = {
     return data;
   },
 
-  // Admin Analytics & Leaderboard
+  // Tutor Account Management
+  getAllTutors: async () => {
+    // Fetches all users with role 'tutor' or 'admin' and aggregates their attempt stats
+    const { data: users, error: userError } = await supabase
+      .from('users')
+      .select(`
+        *,
+        attempts (
+          percentage
+        )
+      `)
+      .order('full_name', { ascending: true });
+
+    if (userError) throw userError;
+
+    return users.map((u: any) => {
+      const attempts = u.attempts || [];
+      const avg = attempts.length > 0 
+        ? attempts.reduce((acc: number, curr: any) => acc + curr.percentage, 0) / attempts.length 
+        : null;
+      
+      return {
+        ...u,
+        total_attempts: attempts.length,
+        average_score: avg
+      };
+    });
+  },
+
+  updateUserAccount: async (userId: string, updates: Partial<User>) => {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  triggerPasswordReset: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  },
+
+  // Manual Unlock
+  unlockTutorRetake: async (userId: string) => {
+    const { error } = await supabase
+      .from('users')
+      .update({ retake_allowed_at: new Date().toISOString() })
+      .eq('id', userId);
+    
+    if (error) throw error;
+  },
+
   getAdminStats: async () => {
     const { data: tutors, error: tutorError } = await supabase
       .from('users')
@@ -118,12 +244,45 @@ export const api = {
 
     if (tutorError || attemptError) throw tutorError || attemptError;
 
-    const totalTutors = tutors.length;
-    const avgGlobalScore = attempts.length > 0 
-      ? attempts.reduce((acc, curr) => acc + curr.percentage, 0) / attempts.length 
+    // Calculate individual tutor stats with OMI
+    const tutorStats = tutors.map(t => {
+      const tAttempts = attempts.filter(a => a.user_id === t.id);
+      
+      // Get latest attempt per category for OMI
+      const latestByCategory: Record<string, any> = {};
+      tAttempts.forEach(a => {
+        if (!latestByCategory[a.category_id] || new Date(a.completed_at) > new Date(latestByCategory[a.category_id].completed_at)) {
+          latestByCategory[a.category_id] = a;
+        }
+      });
+      const latestAttempts = Object.values(latestByCategory);
+      
+      const hasTakenTests = tAttempts.length > 0;
+      const avg = hasTakenTests 
+        ? tAttempts.reduce((acc, curr) => acc + curr.percentage, 0) / tAttempts.length 
+        : null;
+      
+      const omi = calculateOMI(latestAttempts);
+      
+      return {
+        ...t,
+        avgPercentage: avg,
+        omi: omi,
+        testsTaken: tAttempts.length
+      };
+    });
+
+    // 1. Global Metrics: ONLY include active tutors
+    const activeTutors = tutorStats.filter(t => t.testsTaken > 0);
+    const avgGlobalScore = activeTutors.length > 0 
+      ? activeTutors.reduce((acc, curr) => acc + (curr.avgPercentage || 0), 0) / activeTutors.length 
+      : 0;
+    
+    const avgGlobalOMI = activeTutors.length > 0
+      ? activeTutors.reduce((acc, curr) => acc + (curr.omi || 0), 0) / activeTutors.length
       : 0;
 
-    // Category Performance
+    // 2. Category Performance (Normalization logic)
     const catPerformance: Record<string, { total: number, count: number }> = {};
     attempts.forEach(a => {
       const name = a.categories?.name || 'Unknown';
@@ -140,27 +299,19 @@ export const api = {
     const mostPassed = catStats[0]?.name || 'N/A';
     const mostFailed = catStats[catStats.length - 1]?.name || 'N/A';
 
-    // Leaderboard & Risk
-    const tutorStats = tutors.map(t => {
-      const tAttempts = attempts.filter(a => a.user_id === t.id);
-      const avg = tAttempts.length > 0 
-        ? tAttempts.reduce((acc, curr) => acc + curr.percentage, 0) / tAttempts.length 
-        : 0;
-      return {
-        ...t,
-        avgPercentage: avg,
-        testsTaken: tAttempts.length
-      };
-    });
+    // 3. Leaderboard: Excludes tutors with 0 attempts
+    const leaderboard = [...activeTutors].sort((a, b) => (b.avgPercentage || 0) - (a.avgPercentage || 0));
 
-    const leaderboard = [...tutorStats].sort((a, b) => b.avgPercentage - a.avgPercentage);
-    const below60 = tutorStats.filter(t => t.testsTaken > 0 && t.avgPercentage < 60);
+    // 4. Risk Detection: average < 60 AND testsTaken > 0
+    const below60 = activeTutors.filter(t => t.avgPercentage !== null && t.avgPercentage < 60);
     const inactive = tutorStats.filter(t => t.testsTaken === 0);
 
     return {
       metrics: {
-        totalTutors,
+        totalTutors: tutors.length,
+        activeTutorsCount: activeTutors.length,
         avgGlobalScore: Math.round(avgGlobalScore),
+        avgGlobalOMI: Math.round(avgGlobalOMI),
         mostPassed,
         mostFailed,
         atRiskCount: below60.length

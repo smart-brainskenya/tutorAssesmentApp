@@ -23,31 +23,38 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="bg-primary-600 p-1.5 rounded-lg">
-                  <BarChart2 className="w-6 h-6 text-white" />
-                </div>
-                <span className="font-bold text-xl tracking-tight text-slate-900">SBK Tutor Intelligence</span>
+              <Link to="/" className="flex items-center space-x-3 group">
+                <img 
+                  src="/assets/logo.png" 
+                  alt="Smart Brains Kenya Logo" 
+                  className="h-8 w-auto sm:h-10 transition-transform group-hover:scale-105"
+                />
+                <span className="hidden xs:inline font-bold text-lg sm:text-xl tracking-tight text-slate-900 group-hover:text-sbk-blue transition-colors">
+                  SBK Tutor
+                </span>
               </Link>
 
               <nav className="hidden md:flex space-x-4">
                 {userRole === 'tutor' && (
                   <>
-                    <Link to="/dashboard" className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center gap-2">
+                    <Link to="/dashboard" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <LayoutDashboard className="w-4 h-4" /> Dashboard
                     </Link>
-                    <Link to="/assessments" className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center gap-2">
+                    <Link to="/assessments" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <FileText className="w-4 h-4" /> Assessments
                     </Link>
                   </>
                 )}
                 {userRole === 'admin' && (
                   <>
-                    <Link to="/admin/analytics" className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center gap-2">
+                    <Link to="/admin/dashboard" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <BarChart2 className="w-4 h-4" /> Analytics
                     </Link>
-                    <Link to="/admin/manage" className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center gap-2">
+                    <Link to="/admin/manage" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <Settings className="w-4 h-4" /> Management
+                    </Link>
+                    <Link to="/admin/tutors" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                      <LayoutDashboard className="w-4 h-4" /> Staff
                     </Link>
                   </>
                 )}
@@ -75,9 +82,18 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
         {children}
       </main>
 
-      <footer className="bg-white border-t border-slate-200 py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-          &copy; {new Date().getFullYear()} Smart Brains Kenya. Internal Use Only.
+      <footer className="bg-sbk-slate-50 border-t border-slate-200 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="flex justify-center mb-3">
+            <img 
+              src="/assets/logo.png" 
+              alt="Smart Brains Kenya" 
+              className="h-6 w-auto opacity-60"
+            />
+          </div>
+          <p className="text-slate-600 text-sm">
+            &copy; {new Date().getFullYear()} Smart Brains Kenya. Internal Use Only.
+          </p>
         </div>
       </footer>
     </div>
