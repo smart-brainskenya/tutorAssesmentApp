@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../store/AuthContext';
 import { api } from '../../services/api';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Trophy, Target, Zap, AlertTriangle, TrendingUp, Calendar, ArrowLeft } from 'lucide-react';
+import { 
+  Trophy, Target, Zap, TrendingUp, 
+  ArrowLeft, ChevronRight, CheckCircle2,
+  BarChart3, Award
+} from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
 import { calculateOMI } from '../../utils/omi';
@@ -34,45 +37,45 @@ export default function Results() {
 
     const totalTests = attempts.length;
     const avgScore = attempts.reduce((acc, curr) => acc + curr.percentage, 0) / totalTests;
-    const highestScore = Math.max(...attempts.map(a => a.percentage));
-
-    // Category breakdown
-    const catStats: Record<string, { total: number, count: number }> = {};
-    attempts.forEach(a => {
-      const catName = a.categories?.name || 'Unknown';
-      if (!catStats[catName]) catStats[catName] = { total: 0, count: 0 };
-      catStats[catName].total += a.percentage;
-      catStats[catName].count += 1;
-    });
-
-    const chartData = Object.entries(catStats).map(([name, data]) => ({
-      name,
-      percentage: Math.round(data.total / data.count)
-    }));
-
-    // Calculate OMI based on latest attempts
+    
+    // Get latest score per category
     const latestByCategory: Record<string, any> = {};
     attempts.forEach(a => {
-      if (!latestByCategory[a.category_id] || new Date(a.completed_at) > new Date(latestByCategory[a.category_id].completed_at)) {
-        latestByCategory[a.category_id] = a;
+      const catId = a.category_id;
+      if (!latestByCategory[catId] || new Date(a.completed_at) > new Date(latestByCategory[catId].completed_at)) {
+        latestByCategory[catId] = a;
       }
     });
-    const omi = calculateOMI(Object.values(latestByCategory));
 
-    const sortedCats = [...chartData].sort((a, b) => b.percentage - a.percentage);
-    const strongest = sortedCats[0];
-    const weakest = sortedCats[sortedCats.length - 1];
+    const categorySummary = Object.values(latestByCategory).map(a => ({
+      name: a.categories?.name || 'Unknown',
+      percentage: Math.round(a.percentage),
+      date: a.completed_at
+    }));
+
+    const omi = calculateOMI(Object.values(latestByCategory));
 
     return {
       totalTests,
       avgScore: Math.round(avgScore),
-      highestScore: Math.round(highestScore),
-      strongest,
-      weakest,
       omi,
-      chartData
+      categorySummary: categorySummary.sort((a, b) => b.percentage - a.percentage)
     };
   }, [attempts]);
+
+  const getRanking = (pct: number) => {
+    if (pct >= 90) return { title: 'SBK Elite', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', bar: 'bg-green-500' };
+    if (pct >= 75) return { title: 'Code Captain', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', bar: 'bg-blue-500' };
+    if (pct >= 60) return { title: 'Smart Operator', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', bar: 'bg-amber-500' };
+    if (pct >= 40) return { title: 'Rising Brain', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', bar: 'bg-orange-500' };
+    return { title: 'Needs Debugging', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', bar: 'bg-red-500' };
+  };
+
+  const getMotivation = (pct: number) => {
+    if (pct < 60) return "Focus on improving your weakest category.";
+    if (pct < 80) return "You're progressing well.";
+    return "Excellent work. Keep maintaining this standard.";
+  };
 
   if (loading) {
     return (
@@ -84,138 +87,165 @@ export default function Results() {
 
   if (!stats) {
     return (
-      <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
-        <Target className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-slate-900">No Results Yet</h2>
-        <p className="text-slate-500 mb-8">Take your first assessment to see your performance analytics.</p>
-        <Button onClick={() => navigate('/dashboard')}>Go to Assessments</Button>
+      <div className="max-w-2xl mx-auto text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm mt-12">
+        <div className="p-4 bg-slate-50 rounded-full w-fit mx-auto mb-6">
+          <BarChart3 className="w-12 h-12 text-slate-300" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900">No Performance Data</h2>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto">Complete your first assessment to unlock your professional performance dashboard.</p>
+        <Button onClick={() => navigate('/dashboard')} className="px-8">View Available Tests</Button>
       </div>
     );
   }
 
+  const rank = getRanking(stats.avgScore);
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center text-sm font-medium text-slate-500 hover:text-primary-600 mb-2 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Dashboard
-          </button>
-          <h1 className="text-3xl font-black text-slate-900">Performance Analytics</h1>
-        </div>
+        <button 
+          onClick={() => navigate('/dashboard')}
+          className="group flex items-center text-sm font-bold text-slate-400 hover:text-primary-600 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> 
+          Back to Dashboard
+        </button>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="p-2 bg-blue-50 text-blue-600 w-fit rounded-lg mb-4">
-            <Zap className="w-5 h-5" />
+      {/* 1. Performance Overview Section */}
+      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-8 md:p-12 flex flex-col md:flex-row items-center gap-12">
+          <div className="text-center md:text-left space-y-2">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Overall Performance</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-7xl font-black text-slate-900 tracking-tight">{stats.avgScore}%</span>
+            </div>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full border ${rank.bg} ${rank.color} ${rank.border} text-xs font-black uppercase tracking-wider`}>
+              <Award className="w-3.5 h-3.5 mr-1.5" />
+              {rank.title}
+            </div>
           </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">OMI Index</p>
-          <p className="text-3xl font-black text-slate-900">{stats.omi || 'N/A'}%</p>
-          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{stats.totalTests} Tests Taken</p>
-        </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="p-2 bg-primary-50 text-primary-600 w-fit rounded-lg mb-4">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Avg. Score</p>
-          <p className="text-3xl font-black text-slate-900">{stats.avgScore}%</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="p-2 bg-amber-50 text-amber-600 w-fit rounded-lg mb-4">
-            <Trophy className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Highest</p>
-          <p className="text-3xl font-black text-slate-900">{stats.highestScore}%</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="p-2 bg-green-50 text-green-600 w-fit rounded-lg mb-4">
-            <Zap className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Strongest</p>
-          <p className="text-lg font-black text-slate-900 truncate">{stats.strongest.name}</p>
-          <p className="text-xs font-bold text-green-600">{stats.strongest.percentage}% avg</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="p-2 bg-red-50 text-red-600 w-fit rounded-lg mb-4">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Focus Area</p>
-          <p className="text-lg font-black text-slate-900 truncate">{stats.weakest.name}</p>
-          <p className="text-xs font-bold text-red-600">{stats.weakest.percentage}% avg</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Chart */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-8">Performance by Category</h2>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
-                  dy={10}
+          <div className="flex-1 w-full space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-bold">
+                <span className="text-slate-600 tracking-tight">Average Proficiency</span>
+                <span className="text-slate-900">{stats.avgScore}%</span>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-1000 ease-out ${rank.bar}`}
+                  style={{ width: `${stats.avgScore}%` }}
                 />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#64748b', fontSize: 12 }} 
-                  domain={[0, 100]}
-                />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="percentage" radius={[6, 6, 0, 0]} barSize={40}>
-                  {stats.chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.percentage >= 75 ? '#0ea5e9' : entry.percentage >= 60 ? '#10b981' : '#f59e0b'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Recent Activity List */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="font-bold text-slate-900">Recent Attempts</h2>
-          </div>
-          <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
-            {attempts.map((attempt) => (
-              <div key={attempt.id} className="p-4 hover:bg-slate-50 transition-colors">
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-bold text-slate-900 text-sm">{attempt.categories?.name}</h3>
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
-                    attempt.percentage >= 75 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                  }`}>
-                    {Math.round(attempt.percentage)}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-[11px] text-slate-400">
-                  <span>{attempt.score} correct answers</span>
-                  <span>{new Date(attempt.completed_at).toLocaleDateString()}</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">OMI Index</p>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span className="text-xl font-black text-slate-900">{stats.omi || 0}%</span>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="p-4 bg-slate-50 text-center border-t border-slate-100">
-             <p className="text-xs text-slate-500 font-medium italic">Target benchmark for SBK Elite: 90%</p>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assessments</p>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-primary-500" />
+                  <span className="text-xl font-black text-slate-900">{stats.totalTests}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+        <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center md:text-left">
+          <p className="text-sm font-bold text-slate-600 italic">
+            &ldquo;{getMotivation(stats.avgScore)} Keep pushing toward SBK Elite status.&rdquo;
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Category Performance Summary */}
+      <section className="space-y-6">
+        <h2 className="text-lg font-black text-slate-900 uppercase tracking-widest">Skill Breakdown</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stats.categorySummary.map((cat, idx) => {
+            const catRank = getRanking(cat.percentage);
+            return (
+              <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-primary-200 transition-colors group">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-bold text-slate-900 leading-tight pr-4">{cat.name}</h3>
+                  <span className={`text-sm font-black ${catRank.color}`}>{cat.percentage}%</span>
+                </div>
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-700 ${catRank.bar}`}
+                    style={{ width: `${cat.percentage}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase mt-3 tracking-wider">
+                  Latest: {new Date(cat.date).toLocaleDateString()}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 3. Performance History Table */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-black text-slate-900 uppercase tracking-widest">Full History</h2>
+          <span className="text-xs font-bold text-slate-400">{attempts.length} Total Attempts</span>
+        </div>
+        
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50/50 text-slate-400 font-black uppercase tracking-widest border-b border-slate-100">
+                <tr>
+                  <th className="px-8 py-5">Assessment Category</th>
+                  <th className="px-8 py-5">Date</th>
+                  <th className="px-8 py-5">Score</th>
+                  <th className="px-8 py-5 text-right">Result</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {attempts.map((attempt) => {
+                  const attemptRank = getRanking(attempt.percentage);
+                  return (
+                    <tr key={attempt.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-8 py-6">
+                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
+                          {attempt.categories?.name}
+                        </p>
+                      </td>
+                      <td className="px-8 py-6 text-slate-500 font-medium whitespace-nowrap">
+                        {new Date(attempt.completed_at).toLocaleDateString('en-GB', { 
+                          day: '2-digit', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        })}
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-slate-700 font-bold tabular-nums">
+                          {attempt.score} Questions
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <span className={`inline-block px-3 py-1 rounded-lg font-black text-xs ${attemptRank.bg} ${attemptRank.color} border border-transparent group-hover:${attemptRank.border} transition-all`}>
+                          {Math.round(attempt.percentage)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
