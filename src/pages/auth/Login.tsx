@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/common/Button';
@@ -7,7 +7,7 @@ import { Lightbulb, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
 
 export default function Login() {
-  const { profile } = useAuth();
+  useAuth(); // Component participates in AuthContext
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
