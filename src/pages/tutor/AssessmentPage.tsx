@@ -146,11 +146,13 @@ export default function AssessmentPage() {
       <div className="max-w-md w-full">
         <Alert
           variant="error"
-          title="Unable to Load Assessment"
+          title="Assessment Unavailable"
           message={error}
         />
         <div className="mt-6 flex justify-center">
-          <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+          <Button onClick={() => navigate('/dashboard', { state: { initialView: 'tests' } })}>
+            Back to Available Tests
+          </Button>
         </div>
       </div>
     </div>

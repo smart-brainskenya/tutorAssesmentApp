@@ -3,7 +3,7 @@ import { useAuth } from '../../store/AuthContext';
 import { BookOpen, Award, ChevronRight } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { SectionHeader } from '../../components/common/SectionHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../../services/api';
 import { Category } from '../../types';
 import toast from 'react-hot-toast';
@@ -11,7 +11,10 @@ import toast from 'react-hot-toast';
 export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [view, setView] = useState<'home' | 'tests' | 'results'>('home');
+  const location = useLocation();
+  const [view, setView] = useState<'home' | 'tests' | 'results'>(
+    (location.state as any)?.initialView || 'home'
+  );
   const [categories, setCategories] = useState<Category[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
