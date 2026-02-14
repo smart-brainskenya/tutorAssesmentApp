@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Alert } from '../../components/common/Alert';
-import { AlertCircle, ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
 import { api } from '../../services/api';
 import { Question, Section } from '../../types';
 import confetti from 'canvas-confetti';
@@ -23,7 +23,6 @@ export default function AssessmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [score, setScore] = useState(0);
-  const [percentage, setPercentage] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,14 +73,6 @@ export default function AssessmentPage() {
     setTextAnswers({ ...textAnswers, [currentQuestion.id]: text });
   };
 
-  const getRanking = (pct: number) => {
-    if (pct >= 90) return { title: 'SBK Elite', color: 'text-sbk-primary', bg: 'bg-sbk-primary/10' };
-    if (pct >= 75) return { title: 'Code Captain', color: 'text-sbk-depth', bg: 'bg-sbk-depth/10' };
-    if (pct >= 60) return { title: 'Smart Operator', color: 'text-green-600', bg: 'bg-green-100' };
-    if (pct >= 40) return { title: 'Rising Brain', color: 'text-amber-600', bg: 'bg-amber-100' };
-    return { title: 'Needs Debugging', color: 'text-red-600', bg: 'bg-red-100' };
-  };
-
   const handleSubmit = async () => {
     if (!profile || !id || submitting) return;
 
@@ -114,7 +105,6 @@ export default function AssessmentPage() {
 
       // 3. Submit via API
       await api.submitHybridAssessment({
-        userId: profile.id,
         categoryId: id,
         sectionA: {
           rawScore: sectionARawScore,
@@ -125,7 +115,6 @@ export default function AssessmentPage() {
       });
 
       setScore(sectionARawScore);
-      setPercentage(Math.round((sectionARawScore / sectionAMaxScore) * 100));
       setSubmitted(true);
       toast.success('Assessment submitted for review!', { id: toastId });
 

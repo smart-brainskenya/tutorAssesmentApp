@@ -5,7 +5,7 @@ import { Section, Question } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { ArrowLeft, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSectionDetail() {
@@ -89,11 +89,11 @@ export default function AdminSectionDetail() {
         question_text: qText.trim(),
         points: qPoints,
         // MC
-        option_a: section!.section_type === 'A' ? options.A : null,
-        option_b: section!.section_type === 'A' ? options.B : null,
-        option_c: section!.section_type === 'A' ? options.C : null,
-        option_d: section!.section_type === 'A' ? options.D : null,
-        correct_option: section!.section_type === 'A' ? correct : null,
+        option_a: section!.section_type === 'A' ? options.A : undefined,
+        option_b: section!.section_type === 'A' ? options.B : undefined,
+        option_c: section!.section_type === 'A' ? options.C : undefined,
+        option_d: section!.section_type === 'A' ? options.D : undefined,
+        correct_option: section!.section_type === 'A' ? correct : undefined,
         // SA
         rubric_criteria: section!.section_type === 'B' ? rubric : []
       };

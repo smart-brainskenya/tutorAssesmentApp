@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Table } from '../../components/common/Table';
-import { Button } from '../../components/common/Button';
 import { 
   User as UserIcon, Shield, ShieldOff, Key, 
-  Lock, Unlock, Mail, Clock, Search
+  Unlock, Clock, Search
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { User } from '../../types';
 
 export default function Tutors() {
   const [tutors, setTutors] = useState<any[]>([]);

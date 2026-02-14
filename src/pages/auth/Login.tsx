@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
 
 export default function Login() {
@@ -74,77 +74,78 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sbk-primary/5 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-4 bg-sbk-primary/10 rounded-xl mb-4">
-          <Lightbulb className="w-8 h-8 text-sbk-primary" />
+        <div className="inline-flex items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
+          <Lightbulb className="w-10 h-10 text-sbk-accent" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-          SBK Intelligence
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+          Tutor Intelligence
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Smart Brains Kenya - Internal Assessment Portal
+        <p className="text-slate-500 font-medium">
+          Secure Assessment Portal
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm border border-slate-200 sm:rounded-lg sm:px-10">
+        <div className="bg-white py-10 px-8 shadow-xl shadow-slate-200/50 border border-slate-100 sm:rounded-2xl">
           <form className="space-y-6" onSubmit={handleLogin}>
-            <Input
-              label="Work Email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@smartbrainskenya.com"
-            />
+            <div>
+              <Input
+                label="Work Email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@smartbrainskenya.com"
+                className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              />
+            </div>
 
-            <Input
-              label="Password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              />
+            </div>
 
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg font-medium border border-red-100">
+              <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl font-bold border border-red-100 flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-2 flex-shrink-0" />
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-12 text-base shadow-lg shadow-sbk-primary/20 hover:shadow-sbk-primary/30 transition-all duration-300"
               isLoading={loading}
             >
-              Sign In
+              Sign In <ArrowRight className="w-4 h-4 ml-2 opacity-80" />
             </Button>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-500">
-                  First time here?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center">
+          <div className="mt-8 pt-8 border-t border-slate-100">
+            <div className="text-center">
+              <p className="text-sm text-slate-500 mb-3">New to the platform?</p>
               <Link
                 to="/register"
-                className="font-medium text-sbk-primary hover:text-sbk-depth transition-colors"
+                className="inline-flex items-center text-sm font-bold text-sbk-primary hover:text-sbk-depth transition-colors"
               >
-                Register with company email
+                Create your account
               </Link>
             </div>
           </div>
         </div>
+        
+        <p className="mt-8 text-center text-xs text-slate-400 font-medium">
+          &copy; {new Date().getFullYear()} Smart Brains Kenya. All rights reserved.
+        </p>
       </div>
     </div>
   );

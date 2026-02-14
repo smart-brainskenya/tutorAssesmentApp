@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { format } from 'date-fns';
 import { Button } from '../../components/common/Button';
 import { MetricCard } from '../../components/admin/MetricCard';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import {
   Users, TrendingUp, AlertTriangle, Award,
-  FileDown, Search, CheckCircle
+  FileDown, Search
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

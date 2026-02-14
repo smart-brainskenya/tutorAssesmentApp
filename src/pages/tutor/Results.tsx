@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../store/AuthContext';
 import { api } from '../../services/api';
 import { 
-  Trophy, Target, Zap, TrendingUp, 
-  ArrowLeft, ChevronRight, CheckCircle2,
+  Zap, 
+  ArrowLeft, CheckCircle2,
   BarChart3, Award
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';

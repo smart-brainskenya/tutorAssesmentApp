@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
 import { 
-  ClipboardCheck, Clock, User, BookOpen, 
+  ClipboardCheck, User, BookOpen, 
   CheckCircle, AlertCircle, ChevronRight, X 
 } from 'lucide-react';
 import toast from 'react-hot-toast';

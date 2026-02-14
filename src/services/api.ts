@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Category, Question, Attempt, User, Section } from '../types';
+import { Category, Question, User, Section } from '../types';
 import { calculateOMI } from '../utils/omi';
 
 export const api = {
@@ -220,7 +220,7 @@ export const api = {
 
   // Tutor Account Management
   getAllTutors: async () => {
-    // Fetches all users with role 'tutor' or 'admin' and aggregates their attempt stats
+    // Fetches all users with role 'tutor' and aggregates their attempt stats
     const { data: users, error: userError } = await supabase
       .from('users')
       .select(`
@@ -229,6 +229,7 @@ export const api = {
           percentage
         )
       `)
+      .eq('role', 'tutor')
       .order('full_name', { ascending: true });
 
     if (userError) throw userError;
