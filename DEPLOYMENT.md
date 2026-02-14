@@ -5,13 +5,13 @@ This document outlines the steps to deploy the SBK Tutor Intelligence System to 
 ## 1. Supabase Production Setup
 
 1.  **Create Project**: Log in to [Supabase](https://supabase.com) and create a new project.
-2.  **Initialize Database**:
+2. **Initialize Database**:
     -   Open the **SQL Editor**.
-    -   Copy and run the contents of `final_seed_fix.sql`. This script:
-        -   Sets up the `users`, `categories`, `questions`, `attempts`, and `answers` tables.
-        -   Configures Row Level Security (RLS) policies.
+    -   Run the migration scripts found in `database/migrations/` in sequential order (001, 002, 003, 004, 005). These scripts:
+        -   Set up the core schema, hybrid model, and review queue.
+        -   Configures Row Level Security (RLS) policies using non-recursive JWT checks.
         -   Creates the automatic profile trigger for new signups.
-        -   Seeds initial assessment categories and questions.
+
 3.  **URL Configuration**:
     -   Go to **Authentication > URL Configuration**.
     -   Set **Site URL** to your Vercel production domain (e.g., `https://sbk-intelligence.vercel.app`).

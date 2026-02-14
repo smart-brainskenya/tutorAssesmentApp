@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Category, Question, Attempt, Answer, User } from '../types';
+import { Category, Question, Attempt, User, Section } from '../types';
 import { calculateOMI } from '../utils/omi';
 
 export const api = {
@@ -7,15 +7,20 @@ export const api = {
   getCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*, questions(count)')
+      .select('*, sections(questions(count))')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    // Map the nested count object to a flat property for easier UI usage
-    return (data as any[]).map(cat => ({
-      ...cat,
-      question_count: cat.questions?.[0]?.count || 0
-    })) as (Category & { question_count: number })[];
+    
+    // Map the nested count object for easier UI usage
+    return (data as any[]).map(cat => {
+      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
+        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
+      return {
+        ...cat,
+        question_count: totalQuestions
+      };
+    }) as (Category & { question_count: number })[];
   },
 
   createCategory: async (name: string, description: string, published: boolean = false) => {
@@ -60,12 +65,24 @@ export const api = {
     if (error) throw error;
   },
 
+  // Sections
+  getSectionsByCategory: async (categoryId: string) => {
+    const { data, error } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('category_id', categoryId)
+      .order('order_index', { ascending: true });
+    
+    if (error) throw error;
+    return data as Section[];
+  },
+
   // Questions
-  getQuestionsByCategory: async (categoryId: string) => {
+  getQuestionsBySection: async (sectionId: string) => {
     const { data, error } = await supabase
       .from('questions')
       .select('*')
-      .eq('category_id', categoryId)
+      .eq('section_id', sectionId)
       .order('created_at', { ascending: true });
     
     if (error) throw error;
@@ -84,26 +101,9 @@ export const api = {
   },
 
   updateQuestion: async (id: string, updates: Partial<Question>) => {
-    // Safe Type Switching Logic
-    const finalUpdates = { ...updates };
-    
-    if (updates.question_type === 'multiple_choice') {
-      // Clean short_answer fields
-      (finalUpdates as any).min_word_count = 0;
-      (finalUpdates as any).expected_keywords = [];
-      (finalUpdates as any).max_score = 10;
-    } else if (updates.question_type === 'short_answer') {
-      // Clean MC fields
-      (finalUpdates as any).option_a = null;
-      (finalUpdates as any).option_b = null;
-      (finalUpdates as any).option_c = null;
-      (finalUpdates as any).option_d = null;
-      (finalUpdates as any).correct_option = null;
-    }
-
     const { data, error } = await supabase
       .from('questions')
-      .update(finalUpdates)
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -113,52 +113,71 @@ export const api = {
   },
 
   deleteQuestion: async (id: string) => {
-    // Prevention logic: check if question was used in an attempt
-    const { count } = await supabase
-      .from('answers')
-      .select('*', { count: 'exact', head: true })
-      .eq('question_id', id);
-
-    if (count && count > 0) {
-      throw new Error('This question has been answered in past attempts and cannot be deleted. You can edit the text instead.');
-    }
-
     const { error } = await supabase
       .from('questions')
       .delete()
       .eq('id', id);
-    
     if (error) throw error;
   },
 
-  // Attempts & Answers
-  submitAttempt: async (attempt: Omit<Attempt, 'id' | 'completed_at'>, answers: Omit<Answer, 'id' | 'attempt_id'>[]) => {
-    const { data: attemptData, error: attemptError } = await supabase
-      .from('attempts')
-      .insert([attempt])
-      .select()
-      .single();
-
-    if (attemptError) throw attemptError;
-
-    const answersToInsert = answers.map(ans => ({
-      attempt_id: attemptData.id,
-      question_id: ans.question_id,
-      selected_option: ans.selected_option,
-      text_response: ans.text_response,
-      score: ans.score,
-      matched_keywords: ans.matched_keywords,
-      is_correct: ans.is_correct
-    }));
-
-    const { error: answersError } = await supabase
-      .from('answers')
-      .insert(answersToInsert);
-
-    if (answersError) throw answersError;
-
-    return attemptData as Attempt;
+  // Detail Fetchers
+  getCategoryById: async (id: string) => {
+    const { data, error } = await supabase.from('categories').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data as Category;
   },
+
+  getSectionById: async (id: string) => {
+    const { data, error } = await supabase.from('sections').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data as Section;
+  },
+
+  // Section CRUD
+  createSection: async (section: Omit<Section, 'id' | 'created_at'>) => {
+    const { data, error } = await supabase.from('sections').insert([section]).select().single();
+    if (error) throw error;
+    return data as Section;
+  },
+
+  updateSection: async (id: string, updates: Partial<Section>) => {
+    const { data, error } = await supabase.from('sections').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    return data as Section;
+  },
+
+  deleteSection: async (id: string) => {
+    const { error } = await supabase.from('sections').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+
+  // Attempts
+  submitHybridAssessment: async (params: {
+    categoryId: string,
+    sectionA: { rawScore: number, maxScore: number, snapshot: any },
+    sectionB: { questionId: string, answerText: string }[]
+  }) => {
+    // Calls the atomic RPC to ensure attempt and sections are created together
+    const { data, error } = await supabase.rpc('create_and_submit_hybrid_attempt', {
+      p_category_id: params.categoryId,
+      p_section_a: {
+        raw_score: params.sectionA.rawScore,
+        max_score: params.sectionA.maxScore,
+        snapshot: params.sectionA.snapshot
+      },
+      p_section_b: params.sectionB.map(s => ({
+        question_id: s.questionId,
+        answer_text: s.answerText
+      }))
+    });
+
+    if (error) throw error;
+    return data; // Returns the new attempt_id
+  },
+
+
+
 
   getTutorAttempts: async (userId: string) => {
     const { data, error } = await supabase
@@ -168,11 +187,13 @@ export const api = {
         categories (name)
       `)
       .eq('user_id', userId)
+      .eq('status', 'graded') // Only show finalized results to tutors
       .order('completed_at', { ascending: false });
 
     if (error) throw error;
     return data;
   },
+
 
   // Tutor Account Management
   getAllTutors: async () => {
@@ -232,6 +253,64 @@ export const api = {
     if (error) throw error;
   },
 
+  // Review Queue
+  getReviewQueue: async () => {
+    const { data, error } = await supabase
+      .from('review_queue')
+      .select('*');
+    
+    if (error) throw error;
+    return data;
+  },
+
+  getAttemptForReview: async (attemptId: string) => {
+    // 1. Fetch Attempt & Section A Score
+    const { data: attempt, error: aError } = await supabase
+      .from('attempts')
+      .select('*, categories(name), section_a_scores(*)')
+      .eq('id', attemptId)
+      .single();
+
+    if (aError) throw aError;
+
+    // 2. Fetch Section B Submissions with Question details
+    const { data: submissions, error: sError } = await supabase
+      .from('section_b_submissions')
+      .select('*, questions(*)')
+      .eq('attempt_id', attemptId);
+
+    if (sError) throw sError;
+
+    return {
+      attempt,
+      submissions
+    };
+  },
+
+  submitReview: async (attemptId: string, reviews: { submission_id: string, score: number, feedback?: string }[]) => {
+    // Fetch the reviewer ID once before the loop
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // 1. Insert into reviews table
+    const { error: rError } = await supabase
+      .from('reviews')
+      .insert(reviews.map(r => ({
+        ...r,
+        reviewer_id: user?.id
+      })));
+
+    if (rError) throw rError;
+
+    // 2. Call finalize function
+    const { error: fError } = await supabase.rpc('finalize_attempt_review', {
+      p_attempt_id: attemptId
+    });
+
+    if (fError) throw fError;
+
+    return true;
+  },
+
   getAdminStats: async () => {
     const { data: tutors, error: tutorError } = await supabase
       .from('users')
@@ -240,7 +319,9 @@ export const api = {
 
     const { data: attempts, error: attemptError } = await supabase
       .from('attempts')
-      .select('*, categories(name)');
+      .select('*, categories(name)')
+      .eq('status', 'graded'); // Metrics only based on finalized reviews
+
 
     if (tutorError || attemptError) throw tutorError || attemptError;
 

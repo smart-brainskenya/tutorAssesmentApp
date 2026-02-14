@@ -1,14 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { User } from '../types';
+import { User as Profile } from '../types';
+
+type AuthStatus = 'INITIALIZING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
 
 interface AuthContextType {
   user: SupabaseUser | null;
-  profile: User | null;
-  session: Session | null;
-  loading: boolean;
+  profile: Profile | null;
+  status: AuthStatus;
   isAdmin: boolean;
+  signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -16,9 +18,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [status, setStatus] = useState<AuthStatus>('INITIALIZING');
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -28,67 +29,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('[AuthContext] Role fetch failure:', error.message);
+      if (error || !data || data.is_active === false) {
+        console.error('[AuthContext] Profile error or inactive:', error?.message);
+        if (data?.is_active === false) await supabase.auth.signOut();
         setProfile(null);
+        setStatus('UNAUTHENTICATED');
       } else {
-        if (data.is_active === false) {
-          console.warn('[AuthContext] User deactivated, forcing logout');
-          await supabase.auth.signOut();
-          return;
-        }
         setProfile(data);
+        setStatus('AUTHENTICATED');
         // Update last login timestamp silently
         await supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', userId);
       }
-    } catch (error) {
-      console.error('[AuthContext] Unexpected profile fetch error:', error);
-      setProfile(null);
+    } catch (err) {
+      console.error('[AuthContext] Unexpected fetch error:', err);
+      setStatus('UNAUTHENTICATED');
     }
   }, []);
 
   useEffect(() => {
     // 1. Initial session check
     const initAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('[AuthContext] Session fetch failure:', error.message);
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
-      } catch (err) {
-        console.error('[AuthContext] Init auth crash:', err);
-      } finally {
-        setLoading(false);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+      } else {
+        setStatus('UNAUTHENTICATED');
       }
     };
 
     initAuth();
 
     // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`[AuthContext] Auth event: ${event}`);
       
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
         }
-      }
-
-      if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         setProfile(null);
+        setStatus('UNAUTHENTICATED');
       }
-
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -97,9 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     profile,
-    session,
-    loading,
+    status,
     isAdmin: profile?.role === 'admin',
+    signOut: async () => {
+      await supabase.auth.signOut();
+    },
     refreshProfile: async () => {
       if (user) await fetchProfile(user.id);
     }

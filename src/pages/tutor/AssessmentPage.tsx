@@ -4,8 +4,7 @@ import { useAuth } from '../../store/AuthContext';
 import { Button } from '../../components/common/Button';
 import { AlertCircle, ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
 import { api } from '../../services/api';
-import { Question, Answer } from '../../types';
-import { gradeShortAnswer } from '../../utils/grading';
+import { Question, Section } from '../../types';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 
@@ -14,10 +13,11 @@ export default function AssessmentPage() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   
+  const [sections, setSections] = useState<Section[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [mcAnswers, setMcAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
-  const [textAnswers, setTextAnswers] = useState<Record<number, string>>({});
+  const [mcAnswers, setMcAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
+  const [textAnswers, setTextAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -26,32 +26,51 @@ export default function AssessmentPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) fetchQuestions(id);
+    if (id) fetchAssessmentData(id);
   }, [id]);
 
-  const fetchQuestions = async (categoryId: string) => {
+  const fetchAssessmentData = async (categoryId: string) => {
     try {
-      const data = await api.getQuestionsByCategory(categoryId);
-      if (data.length === 0) {
-        setError('No questions found for this category.');
+      setLoading(true);
+      // 1. Fetch Sections
+      const fetchedSections = await api.getSectionsByCategory(categoryId);
+      if (fetchedSections.length === 0) {
+        setError('No sections found for this assessment.');
+        return;
       }
-      setQuestions(data);
+      setSections(fetchedSections);
+
+      // 2. Fetch Questions for each section and flatten them
+      const allQuestions: Question[] = [];
+      for (const section of fetchedSections) {
+        const sectionQuestions = await api.getQuestionsBySection(section.id);
+        allQuestions.push(...sectionQuestions);
+      }
+
+      if (allQuestions.length === 0) {
+        setError('No questions found for this assessment.');
+        return;
+      }
+      setQuestions(allQuestions);
     } catch (err: any) {
       setError('Failed to load assessment. ' + err.message);
-      toast.error('Network error. Could not fetch questions.');
+      toast.error('Network error. Could not fetch assessment data.');
     } finally {
       setLoading(false);
     }
   };
 
+  const currentQuestion = questions[currentIndex];
+  const currentSection = sections.find(s => s.id === currentQuestion?.section_id);
+
   const handleOptionSelect = (option: 'A' | 'B' | 'C' | 'D') => {
-    if (submitting || submitted) return;
-    setMcAnswers({ ...mcAnswers, [currentIndex]: option });
+    if (submitting || submitted || !currentQuestion) return;
+    setMcAnswers({ ...mcAnswers, [currentQuestion.id]: option });
   };
 
   const handleTextChange = (text: string) => {
-    if (submitting || submitted) return;
-    setTextAnswers({ ...textAnswers, [currentIndex]: text });
+    if (submitting || submitted || !currentQuestion) return;
+    setTextAnswers({ ...textAnswers, [currentQuestion.id]: text });
   };
 
   const getRanking = (pct: number) => {
@@ -66,60 +85,50 @@ export default function AssessmentPage() {
     if (!profile || !id || submitting) return;
 
     setSubmitting(true);
-    const toastId = toast.loading('Calculating and saving results...');
+    const toastId = toast.loading('Submitting your assessment...');
 
     try {
-      let totalEarnedScore = 0;
-      let totalPossibleScore = 0;
-      const detailAnswers: Omit<Answer, 'id' | 'attempt_id'>[] = [];
+      // 1. Logic for Section A (Auto-grading MCQ)
+      const mcQuestions = questions.filter(q => q.question_type === 'multiple_choice');
+      let sectionARawScore = 0;
+      let sectionAMaxScore = 0;
+      const snapshot: Record<string, string> = {};
 
-      questions.forEach((q, index) => {
-        if (q.question_type === 'short_answer') {
-          const response = textAnswers[index] || '';
-          const result = gradeShortAnswer(response, q.min_word_count, q.expected_keywords, q.max_score);
-          
-          totalEarnedScore += result.score;
-          totalPossibleScore += (q.max_score || 10);
-
-          detailAnswers.push({
-            question_id: q.id,
-            text_response: response,
-            score: result.score,
-            matched_keywords: result.matchedKeywords,
-            is_correct: result.isCorrect
-          });
-        } else {
-          const selected = mcAnswers[index];
-          const isCorrect = selected === q.correct_option;
-          const qScore = isCorrect ? 10 : 0; // MC defaults to 10 points
-          
-          totalEarnedScore += qScore;
-          totalPossibleScore += 10;
-          
-          detailAnswers.push({
-            question_id: q.id,
-            selected_option: selected,
-            score: qScore,
-            is_correct: isCorrect
-          });
+      mcQuestions.forEach(q => {
+        const selected = mcAnswers[q.id];
+        const points = q.points || 10;
+        sectionAMaxScore += points;
+        snapshot[q.id] = selected || '';
+        if (selected === q.correct_option) {
+          sectionARawScore += points;
         }
       });
 
-      const finalPercentage = Math.round((totalEarnedScore / totalPossibleScore) * 100);
-      
-      await api.submitAttempt({
-        user_id: profile.id,
-        category_id: id,
-        score: totalEarnedScore,
-        percentage: finalPercentage,
-      }, detailAnswers);
+      // 2. Logic for Section B (Manual Review Submissions)
+      const saQuestions = questions.filter(q => q.question_type === 'short_answer');
+      const sectionBSubs = saQuestions.map(q => ({
+        questionId: q.id,
+        answerText: textAnswers[q.id] || ''
+      }));
 
-      setScore(totalEarnedScore);
-      setPercentage(finalPercentage);
+      // 3. Submit via API
+      await api.submitHybridAssessment({
+        userId: profile.id,
+        categoryId: id,
+        sectionA: {
+          rawScore: sectionARawScore,
+          maxScore: sectionAMaxScore,
+          snapshot
+        },
+        sectionB: sectionBSubs
+      });
+
+      setScore(sectionARawScore);
+      setPercentage(Math.round((sectionARawScore / sectionAMaxScore) * 100));
       setSubmitted(true);
-      toast.success('Assessment saved!', { id: toastId });
+      toast.success('Assessment submitted for review!', { id: toastId });
 
-      if (finalPercentage >= 90) {
+      if ((sectionARawScore / sectionAMaxScore) >= 0.9) {
         confetti({
           particleCount: 150,
           spread: 70,
@@ -128,8 +137,8 @@ export default function AssessmentPage() {
         });
       }
     } catch (err: any) {
-      console.error('Failed to save attempt:', err);
-      toast.error(err.message || 'Failed to save results. Please try again.', { id: toastId });
+      console.error('Failed to submit attempt:', err);
+      toast.error(err.message || 'Failed to submit. Please try again.', { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -152,69 +161,42 @@ export default function AssessmentPage() {
   );
 
   if (submitted) {
-    const ranking = getRanking(percentage);
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50 flex items-center justify-center px-6 py-12">
         <div className="max-w-2xl w-full animate-in fade-in zoom-in duration-500">
-          {/* Trophy Icon */}
-          <div className={`flex justify-center mb-10`}>
-            <div className={`inline-flex items-center justify-center p-8 rounded-2xl ${ranking.bg}`}>
-              <Trophy className={`w-20 h-20 ${ranking.color}`} />
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex items-center justify-center p-8 rounded-2xl bg-amber-100">
+              <Trophy className="w-20 h-20 text-amber-600" />
             </div>
           </div>
           
-          {/* Title */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">Assessment Complete!</h1>
-            <p className="text-lg text-slate-600">Here's how you performed on this assessment.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">Assessment Submitted!</h1>
+            <p className="text-lg text-slate-600">Your performance is being recorded.</p>
           </div>
           
-          {/* Results Card */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden mb-10">
-            {/* Top Progress Bar */}
-            <div className="h-2 bg-slate-100">
-              <div 
-                className={`h-full transition-all duration-1000 ease-out ${percentage >= 60 ? 'bg-gradient-to-r from-sbk-blue to-sbk-teal' : 'bg-gradient-to-r from-sbk-orange to-amber-600'}`}
-                style={{ width: `${percentage}%` }}
-              ></div>
-            </div>
-
-            {/* Results Grid */}
             <div className="p-10 md:p-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Score Section */}
                 <div className="flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Your Score</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Section A Score</p>
                   <p className="text-5xl md:text-6xl font-bold text-slate-900 mb-2">{score}</p>
-                  <p className={`text-3xl font-bold ${percentage >= 60 ? 'text-sbk-blue' : 'text-sbk-orange'}`}>
-                    {Math.round(percentage)}%
-                  </p>
-                  <p className="text-sm text-slate-500 mt-4">
-                    {percentage >= 90 ? '🎉 Outstanding performance!' : 
-                     percentage >= 75 ? '✓ Great job!' :
-                     percentage >= 60 ? '→ Good effort! Keep practicing.' :
-                     '→ Keep working on this skill.'}
+                  <p className="text-xl font-bold text-sbk-blue">
+                    Knowledge Check Complete
                   </p>
                 </div>
 
-                {/* Ranking Section */}
-                <div className={`flex flex-col justify-center p-6 rounded-xl ${ranking.bg}`}>
-                  <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Your Ranking</p>
-                  <p className={`text-4xl font-bold ${ranking.color} mb-4`}>{ranking.title}</p>
-                  <p className="text-sm text-slate-700">
-                    SBK Performance Benchmark: 75%
+                <div className="flex flex-col justify-center p-6 rounded-xl bg-slate-50 border border-slate-200">
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Status</p>
+                  <p className="text-2xl font-bold text-sbk-orange mb-2">Awaiting Review</p>
+                  <p className="text-sm text-slate-600">
+                    Your Section B responses are pending manual review by an SBK Admin.
                   </p>
-                  <div className="mt-4 pt-4 border-t border-current border-opacity-10">
-                    <p className="text-xs text-slate-600">
-                      {percentage >= 75 ? 'You are above benchmark!' : 'Target: 75% or higher'}
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
@@ -224,18 +206,12 @@ export default function AssessmentPage() {
             >
               Back to Dashboard
             </Button>
-            <Button 
-              size="lg" 
-              onClick={() => window.location.reload()}
-              className="px-8 shadow-lg shadow-sbk-blue/20"
-            >
-              Retake Assessment
-            </Button>
           </div>
         </div>
       </div>
     );
   }
+
 
   const currentQuestion = questions[currentIndex];
   const isMc = currentQuestion.question_type === 'multiple_choice';
@@ -246,9 +222,9 @@ export default function AssessmentPage() {
     { label: 'D', text: currentQuestion.option_d },
   ] : [];
 
-  const isAnswered = isMc 
-    ? mcAnswers[currentIndex] !== undefined 
-    : (textAnswers[currentIndex]?.trim().length || 0) > 0;
+  const isAnswered = currentQuestion?.question_type === 'multiple_choice' 
+    ? mcAnswers[currentQuestion.id] !== undefined 
+    : (textAnswers[currentQuestion?.id]?.trim().length || 0) > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50">
@@ -263,6 +239,13 @@ export default function AssessmentPage() {
       <div className="max-w-3xl mx-auto py-12 px-6">
         {/* Header - Minimal and Focused */}
         <div className="mb-10 text-center">
+          {currentSection && (
+             <div className="mb-2">
+                <span className="text-sm font-black text-sbk-blue uppercase tracking-[0.2em] bg-blue-50 px-4 py-1 rounded-full">
+                  {currentSection.title}
+                </span>
+             </div>
+          )}
           <div className="inline-flex items-center justify-center px-4 py-1.5 bg-slate-100 rounded-full mb-4">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Question {currentIndex + 1} of {questions.length}</span>
           </div>
@@ -289,7 +272,7 @@ export default function AssessmentPage() {
           </h2>
 
           {/* Answer Section */}
-          {isMc ? (
+          {currentQuestion.question_type === 'multiple_choice' ? (
             // Multiple Choice Options
             <div className="space-y-4">
               {options.map((option) => (
@@ -298,14 +281,14 @@ export default function AssessmentPage() {
                   onClick={() => handleOptionSelect(option.label as any)}
                   disabled={submitting || submitted}
                   className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left flex items-start gap-4 group ${
-                    mcAnswers[currentIndex] === option.label 
+                    mcAnswers[currentQuestion.id] === option.label 
                       ? 'border-sbk-blue bg-blue-50 shadow-md' 
                       : 'border-slate-200 hover:border-sbk-blue/30 hover:bg-slate-50 hover:shadow-sm'
                   } ${(submitting || submitted) ? 'cursor-not-allowed opacity-75' : 'cursor-pointer active:scale-[0.99]'}`}
                 >
                   {/* Option Letter Button */}
                   <div className={`flex-shrink-0 w-10 h-10 rounded-lg border-2 flex items-center justify-center font-bold text-sm transition-all duration-200 ${
-                    mcAnswers[currentIndex] === option.label 
+                    mcAnswers[currentQuestion.id] === option.label 
                       ? 'bg-sbk-blue border-sbk-blue text-white' 
                       : 'bg-white border-slate-300 text-slate-600 group-hover:border-sbk-blue/40'
                   }`}>
@@ -313,7 +296,7 @@ export default function AssessmentPage() {
                   </div>
                   {/* Option Text */}
                   <span className={`flex-1 text-lg font-semibold pt-0.5 ${
-                    mcAnswers[currentIndex] === option.label 
+                    mcAnswers[currentQuestion.id] === option.label 
                       ? 'text-primary-900' 
                       : 'text-slate-700'
                   }`}>
@@ -332,7 +315,7 @@ export default function AssessmentPage() {
                 <textarea
                     className="w-full h-48 p-5 rounded-xl border-2 border-slate-200 focus:border-sbk-blue focus:ring-4 focus:ring-sbk-blue/10 focus:outline-none transition-all duration-200 resize-none text-lg leading-relaxed text-slate-700 placeholder-slate-400 font-medium"
                   placeholder="Type your detailed response here. Be thorough and clear in your answer..."
-                  value={textAnswers[currentIndex] || ''}
+                  value={textAnswers[currentQuestion.id] || ''}
                   onChange={(e) => handleTextChange(e.target.value)}
                   disabled={submitting || submitted}
                 />
@@ -348,18 +331,19 @@ export default function AssessmentPage() {
                   <div className="hidden md:block h-4 border-l border-slate-200"></div>
                   <div className="md:block">
                     <span className="text-slate-600 font-medium">Your Words: </span>
-                    <span className={`font-bold ${(textAnswers[currentIndex]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-green-600' : 'text-amber-600'}`}>
-                      {(textAnswers[currentIndex]?.trim().split(/\s+/).filter(w => w).length) || 0}
+                    <span className={`font-bold ${(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-green-600' : 'text-amber-600'}`}>
+                      {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length) || 0}
                     </span>
                   </div>
                 </div>
-                {(textAnswers[currentIndex]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) && (
+                {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) && (
                   <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">✓ Met</span>
                 )}
               </div>
             </div>
           )}
         </div>
+
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between gap-4">

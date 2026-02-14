@@ -19,9 +19,19 @@ export interface Category {
   created_at: string;
 }
 
-export interface Question {
+export interface Section {
   id: string;
   category_id: string;
+  section_type: 'A' | 'B';
+  title: string;
+  description?: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface Question {
+  id: string;
+  section_id: string;
   question_type: 'multiple_choice' | 'short_answer';
   question_text: string;
   // MC fields
@@ -32,11 +42,12 @@ export interface Question {
   correct_option?: 'A' | 'B' | 'C' | 'D';
   // Short Answer fields
   min_word_count?: number;
-  expected_keywords?: { keyword: string; weight: number }[];
-  max_score?: number;
+  rubric_criteria?: { label: string; max: number }[];
+  points?: number;
   explanation?: string;
   created_at: string;
 }
+
 
 export interface Attempt {
   id: string;
@@ -44,16 +55,7 @@ export interface Attempt {
   category_id: string;
   score: number;
   percentage: number;
+  status: 'in_progress' | 'submitted' | 'graded';
   completed_at: string;
 }
 
-export interface Answer {
-  id: string;
-  attempt_id: string;
-  question_id: string;
-  selected_option?: 'A' | 'B' | 'C' | 'D'; // For MC
-  text_response?: string; // For Short Answer
-  score: number;
-  matched_keywords?: { keyword: string; weight: number }[];
-  is_correct: boolean;
-}

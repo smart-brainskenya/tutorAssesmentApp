@@ -17,54 +17,58 @@ export function AuthLoading() {
 }
 
 /**
- * Base Guard - Requires Authentication
+ * Combined Guard - Requires Authentication and optional Role
  */
-export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+export function ProtectedRoute({ 
+  children, 
+  requiredRole 
+}: { 
+  children: ReactNode; 
+  requiredRole?: 'admin' | 'tutor';
+}) {
+  const { status, profile } = useAuth();
   const location = useLocation();
 
-  if (loading) return <AuthLoading />;
+  if (status === 'INITIALIZING') {
+    return <AuthLoading />;
+  }
 
-  if (!user) {
-    console.warn('[ProtectedRoute] Unauthorized access attempt to:', location.pathname);
+  if (status === 'UNAUTHENTICATED') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
-}
-
-/**
- * Admin Only Guard
- */
-export function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, profile, loading } = useAuth();
-
-  if (loading) return <AuthLoading />;
-
-  if (!user) return <Navigate to="/login" replace />;
-
-  if (profile && profile.role !== 'admin') {
-    console.error('[AdminRoute] Role mismatch. Expected admin, got:', profile.role);
-    return <Navigate to="/dashboard" replace />;
+  if (requiredRole && profile && profile.role !== requiredRole) {
+    const dest = profile.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    return <Navigate to={dest} replace />;
   }
 
   return <>{children}</>;
 }
 
 /**
- * Tutor Only Guard
+ * Public Only Guard (Login/Register)
+ * Redirects to dashboard if already authenticated
  */
-export function TutorRoute({ children }: { children: ReactNode }) {
-  const { user, profile, loading } = useAuth();
+export function PublicRoute({ children }: { children: ReactNode }) {
+  const { status, profile } = useAuth();
 
-  if (loading) return <AuthLoading />;
+  if (status === 'INITIALIZING') {
+    return <AuthLoading />;
+  }
 
-  if (!user) return <Navigate to="/login" replace />;
-
-  if (profile && profile.role !== 'tutor') {
-    console.error('[TutorRoute] Role mismatch. Expected tutor, got:', profile.role);
-    return <Navigate to="/admin/dashboard" replace />;
+  if (status === 'AUTHENTICATED' && profile) {
+    const dest = profile.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    return <Navigate to={dest} replace />;
   }
 
   return <>{children}</>;
 }
+
+// Legacy Aliases for compatibility during migration
+export const AdminRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute requiredRole="admin">{children}</ProtectedRoute>
+);
+
+export const TutorRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute requiredRole="tutor">{children}</ProtectedRoute>
+);

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './store/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { AdminRoute, TutorRoute, AuthLoading } from './components/AuthGuards';
+import { ProtectedRoute, PublicRoute, AuthLoading } from './components/AuthGuards';
 import { Layout } from './components/layout/Layout';
 import { lazy, Suspense } from 'react';
 
@@ -15,24 +15,9 @@ const TutorResults = lazy(() => import('./pages/tutor/Results'));
 const AdminDashboard = lazy(() => import('./pages/admin/Analytics'));
 const AdminManage = lazy(() => import('./pages/admin/Manage'));
 const AdminTutors = lazy(() => import('./pages/admin/Tutors'));
-
-/**
- * Intelligent Redirector for Landing Page
- */
-function LandingRedirect() {
-  const { user, profile, loading } = useAuth();
-
-  if (loading) return <AuthLoading />;
-  if (!user) return <Navigate to="/login" replace />;
-  
-  if (profile) {
-    return profile.role === 'admin' 
-      ? <Navigate to="/admin/dashboard" replace /> 
-      : <Navigate to="/dashboard" replace />;
-  }
-
-  return <AuthLoading />;
-}
+const ReviewQueue = lazy(() => import('./pages/admin/ReviewQueue'));
+const AdminCategoryDetail = lazy(() => import('./pages/admin/AdminCategoryDetail'));
+const AdminSectionDetail = lazy(() => import('./pages/admin/AdminSectionDetail'));
 
 /**
  * Wrap protected routes with standard Layout
@@ -59,48 +44,63 @@ function App() {
           <Suspense fallback={<AuthLoading />}>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               
-              {/* Landing Logic */}
-              <Route path="/" element={<LandingRedirect />} />
+              {/* Root Redirector handled by PublicRoute logic on /login or guards on protected */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
               
               {/* Tutor Routes */}
               <Route path="/dashboard" element={
-                <TutorRoute>
+                <ProtectedRoute requiredRole="tutor">
                   <AuthenticatedLayout><TutorDashboard /></AuthenticatedLayout>
-                </TutorRoute>
+                </ProtectedRoute>
               } />
               <Route path="/assessments/:id" element={
-                <TutorRoute>
+                <ProtectedRoute requiredRole="tutor">
                   <AuthenticatedLayout><AssessmentPage /></AuthenticatedLayout>
-                </TutorRoute>
+                </ProtectedRoute>
               } />
               <Route path="/results" element={
-                <TutorRoute>
+                <ProtectedRoute requiredRole="tutor">
                   <AuthenticatedLayout><TutorResults /></AuthenticatedLayout>
-                </TutorRoute>
+                </ProtectedRoute>
               } />
               
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={
-                <AdminRoute>
+                <ProtectedRoute requiredRole="admin">
                   <AuthenticatedLayout><AdminDashboard /></AuthenticatedLayout>
-                </AdminRoute>
+                </ProtectedRoute>
               } />
               <Route path="/admin/manage" element={
-                <AdminRoute>
+                <ProtectedRoute requiredRole="admin">
                   <AuthenticatedLayout><AdminManage /></AuthenticatedLayout>
-                </AdminRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/category/:id" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AuthenticatedLayout><AdminCategoryDetail /></AuthenticatedLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/section/:id" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AuthenticatedLayout><AdminSectionDetail /></AuthenticatedLayout>
+                </ProtectedRoute>
               } />
               <Route path="/admin/tutors" element={
-                <AdminRoute>
+                <ProtectedRoute requiredRole="admin">
                   <AuthenticatedLayout><AdminTutors /></AuthenticatedLayout>
-                </AdminRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/review" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AuthenticatedLayout><ReviewQueue /></AuthenticatedLayout>
+                </ProtectedRoute>
               } />
 
               {/* Fallback */}
-              <Route path="*" element={<LandingRedirect />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </Router>

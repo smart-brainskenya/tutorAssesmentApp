@@ -58,7 +58,7 @@ The system requires a Supabase instance. Initial schema and seed data are provid
 - **API Layer**: All database interactions must go through `src/services/api.ts` to ensure consistent error handling and type safety.
 
 ### Assessment Logic
-- **Scoring**: Calculated on the frontend and persisted via the `attempts` and `answers` tables.
+- **Scoring**: Managed by the database via the hybrid model. Section A is auto-tallied, while Section B requires manual admin review. Final scores are updated only after review completion.
 - **Rankings**:
   - 90–100% → SBK Elite
   - 75–89% → Code Captain
