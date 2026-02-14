@@ -4,7 +4,8 @@ import { api } from '../../services/api';
 import { Section, Question } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { ArrowLeft, Plus, Trash2, Edit2, Save, X, Hash, ClipboardList } from 'lucide-react';
+import { Modal } from '../../components/common/Modal';
+import { ArrowLeft, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSectionDetail() {
@@ -13,6 +14,7 @@ export default function AdminSectionDetail() {
   const [section, setSection] = useState<Section | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   // Form State
   const [qText, setQText] = useState('');
@@ -24,6 +26,11 @@ export default function AdminSectionDetail() {
 
   // SA specific (Rubric)
   const [rubric, setRubric] = useState<{ label: string; max: number }[]>([]);
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (id) fetchData();
@@ -45,43 +52,91 @@ export default function AdminSectionDetail() {
     }
   };
 
-  const handleCreateQuestion = async () => {
+  const handleEditClick = (q: Question) => {
+    setEditingQuestion(q);
+    setQText(q.question_text);
+    setQPoints(q.points || 10);
+    if (q.question_type === 'multiple_choice') {
+      setOptions({
+        A: q.option_a || '',
+        B: q.option_b || '',
+        C: q.option_c || '',
+        D: q.option_d || ''
+      });
+      setCorrect(q.correct_option || 'A');
+    } else {
+      setRubric(q.rubric_criteria || []);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const resetForm = () => {
+    setEditingQuestion(null);
+    setQText('');
+    setQPoints(10);
+    setOptions({ A: '', B: '', C: '', D: '' });
+    setCorrect('A');
+    setRubric([]);
+  };
+
+  const handleSubmitQuestion = async () => {
     if (!qText.trim()) return toast.error('Question text required');
     
     try {
-      const payload: Omit<Question, 'id' | 'created_at'> = {
+      const payload: Partial<Question> = {
         section_id: id!,
         question_type: section!.section_type === 'A' ? 'multiple_choice' : 'short_answer',
         question_text: qText.trim(),
         points: qPoints,
         // MC
-        option_a: section!.section_type === 'A' ? options.A : undefined,
-        option_b: section!.section_type === 'A' ? options.B : undefined,
-        option_c: section!.section_type === 'A' ? options.C : undefined,
-        option_d: section!.section_type === 'A' ? options.D : undefined,
-        correct_option: section!.section_type === 'A' ? correct : undefined,
+        option_a: section!.section_type === 'A' ? options.A : null,
+        option_b: section!.section_type === 'A' ? options.B : null,
+        option_c: section!.section_type === 'A' ? options.C : null,
+        option_d: section!.section_type === 'A' ? options.D : null,
+        correct_option: section!.section_type === 'A' ? correct : null,
         // SA
         rubric_criteria: section!.section_type === 'B' ? rubric : []
       };
 
-      const newQ = await api.createQuestion(payload);
-      setQuestions([...questions, newQ]);
-      setQText(''); setOptions({ A: '', B: '', C: '', D: '' }); setRubric([]);
-      toast.success('Question added');
+      if (editingQuestion) {
+        await api.updateQuestion(editingQuestion.id, payload);
+        setQuestions(questions.map(q => q.id === editingQuestion.id ? { ...q, ...payload } as Question : q));
+        toast.success('Question updated');
+      } else {
+        const newQ = await api.createQuestion(payload as Omit<Question, 'id' | 'created_at'>);
+        setQuestions([...questions, newQ]);
+        toast.success('Question added');
+      }
+      resetForm();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create question');
+      toast.error(err.message || 'Failed to save question');
     }
   };
 
-  const handleDeleteQuestion = async (qId: string) => {
-    if (!confirm('Delete this question?')) return;
+  const handleDeleteQuestion = async (question: Question) => {
+    setQuestionToDelete(question);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteQuestion = async () => {
+    if (!questionToDelete) return;
     try {
-      await api.deleteQuestion(qId);
-      setQuestions(questions.filter(q => q.id !== qId));
-      toast.success('Deleted');
+      setIsDeleting(true);
+      await api.deleteQuestion(questionToDelete.id);
+      setQuestions(questions.filter(q => q.id !== questionToDelete.id));
+      toast.success('Question deleted successfully');
+      setDeleteModalOpen(false);
+      setQuestionToDelete(null);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || 'Failed to delete question');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDeleteQuestion = () => {
+    setDeleteModalOpen(false);
+    setQuestionToDelete(null);
   };
 
   if (loading) return <div className="p-12 text-center animate-pulse">Loading section content...</div>;
@@ -105,7 +160,16 @@ export default function AdminSectionDetail() {
       {/* Question Form */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-8 bg-slate-50 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">New {section?.section_type === 'A' ? 'Multiple Choice' : 'Text Input'} Question</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-slate-900">
+              {editingQuestion ? 'Edit Question' : `New ${section?.section_type === 'A' ? 'Multiple Choice' : 'Text Input'} Question`}
+            </h2>
+            {editingQuestion && (
+              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
+                <X className="w-4 h-4" /> Cancel Edit
+              </button>
+            )}
+          </div>
           <div className="space-y-6">
             <Input label="Question Text" placeholder="Enter the technical question..." value={qText} onChange={e => setQText(e.target.value)} />
             
@@ -150,8 +214,8 @@ export default function AdminSectionDetail() {
             )}
 
             <div className="flex justify-end pt-4">
-              <Button onClick={handleCreateQuestion} className="px-12 gap-2">
-                <Plus className="w-4 h-4" /> Save Question to Section
+              <Button onClick={handleSubmitQuestion} className="px-12 gap-2">
+                <Plus className="w-4 h-4" /> {editingQuestion ? 'Update Question' : 'Save Question to Section'}
               </Button>
             </div>
           </div>
@@ -172,7 +236,14 @@ export default function AdminSectionDetail() {
                     <p className="font-bold text-slate-800 text-lg">{q.question_text}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                    <button 
+                      onClick={() => handleEditClick(q)} 
+                      className="p-2 text-slate-400 hover:text-sbk-blue hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit question"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleDeleteQuestion(q)} className="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete question">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
@@ -182,6 +253,18 @@ export default function AdminSectionDetail() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        title="Delete Question"
+        description="Are you sure you want to delete this question? This action cannot be undone."
+        variant="danger"
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteQuestion}
+        onCancel={cancelDeleteQuestion}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

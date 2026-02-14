@@ -12,7 +12,6 @@ export const api = {
     
     if (error) throw error;
     
-    // Map the nested count object for easier UI usage
     return (data as any[]).map(cat => {
       const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
         acc + (sec.questions?.[0]?.count || 0), 0) || 0;
@@ -23,10 +22,34 @@ export const api = {
     }) as (Category & { question_count: number })[];
   },
 
-  createCategory: async (name: string, description: string, published: boolean = false) => {
+  getPublishedCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .insert([{ name, description, published }])
+      .select('*, sections(questions(count))')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return (data as any[]).map(cat => {
+      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
+        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
+      return {
+        ...cat,
+        question_count: totalQuestions
+      };
+    }) as (Category & { question_count: number })[];
+  },
+
+  createCategory: async (name: string, description: string, is_published: boolean = false) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ 
+        name, 
+        description, 
+        is_published,
+        published_at: is_published ? new Date().toISOString() : null 
+      }])
       .select()
       .single();
     

@@ -1,9 +1,10 @@
 # NEXT ACTION TRACKING
 
 ## Change Summary:
-- Locked final scoring to the database by filtering `getTutorAttempts` and `getAdminStats` to only return `graded` attempts.
-- Removed any potential for frontend-side percentage calculation for finalized results.
-- Verified that `Results.tsx` and `Analytics.tsx` consume `percentage` directly from the `attempts` table.
+- Fixed compilation error in `AssessmentPage.tsx` caused by duplicate `currentQuestion` declaration.
+- Added safety checks in `AssessmentPage.tsx` to prevent crashes during initial data load.
+- Implemented Question Editing functionality in `AdminSectionDetail.tsx`.
+- Refined Question CRUD UI with "Edit" and "Cancel Edit" actions.
 
 ## SQL Required?
 No
@@ -15,7 +16,7 @@ No
 No
 
 ## Manual Testing Required?
-Yes (Verify that attempts with status 'submitted' do not appear in Tutor History or contribute to Admin Analytics until they are reviewed).
+Yes (Verify Tutor assessment page loads without error and Admin can successfully edit both MCQ and Text questions).
 
 ## Safe to Push?
 Yes

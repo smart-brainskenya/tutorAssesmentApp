@@ -17,7 +17,8 @@ Assessment topics (e.g., "React Advanced", "Pedagogy").
 - `id` (UUID, PK)
 - `name` (TEXT)
 - `description` (TEXT)
-- `published` (BOOLEAN)
+- `is_published` (BOOLEAN)
+- `published_at` (TIMESTAMP)
 
 ### 3. `sections`
 Hybrid structure within a category.

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, LayoutGrid, Globe, Lock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { Modal } from '../../components/common/Modal';
+import { Badge } from '../../components/common/Badge';
+import { SectionHeader } from '../../components/common/SectionHeader';
 import { api } from '../../services/api';
 import { Category } from '../../types';
 import toast from 'react-hot-toast';
@@ -12,6 +15,9 @@ export default function Manage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCatName, setNewCatName] = useState('');
   const [newCatDesc, setNewCatDesc] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,10 +40,10 @@ export default function Manage() {
     if (!newCatName.trim()) return toast.error('Name required');
     try {
       setLoading(true);
-      const newCat = await api.createCategory(newCatName.trim(), newCatDesc.trim(), true);
+      const newCat = await api.createCategory(newCatName.trim(), newCatDesc.trim(), false);
       setCategories([newCat, ...categories]);
       setNewCatName(''); setNewCatDesc('');
-      toast.success('Category created');
+      toast.success('Category created as Draft');
     } catch (error) {
       toast.error('Failed to create category');
     } finally {
@@ -45,64 +51,138 @@ export default function Manage() {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Delete this category and all its sections?')) return;
+  const handleTogglePublish = async (cat: Category) => {
+    const nextState = !cat.is_published;
     try {
-      await api.deleteCategory(id);
-      setCategories(categories.filter(c => c.id !== id));
-      toast.success('Deleted');
-    } catch (error: any) {
-      toast.error(error.message);
+      await api.updateCategory(cat.id, { 
+        is_published: nextState,
+        published_at: nextState ? new Date().toISOString() : undefined
+      });
+      setCategories(categories.map(c => 
+        c.id === cat.id ? { ...c, is_published: nextState } : c
+      ));
+      toast.success(nextState ? 'Category is now LIVE' : 'Category returned to DRAFT');
+    } catch (err) {
+      toast.error('Failed to update visibility');
     }
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    try {
+      setIsDeleting(true);
+      await api.deleteCategory(categoryToDelete.id);
+      setCategories(categories.filter(c => c.id !== categoryToDelete.id));
+      toast.success('Category deleted successfully');
+      setDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete category');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDeleteCategory = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Assessment Categories</h1>
-          <p className="text-sm text-slate-500">Define top-level assessment topics.</p>
-        </div>
-      </div>
+      <SectionHeader
+        title="Assessment Categories"
+        subtitle="Define top-level assessment topics"
+      />
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-8 bg-slate-50 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Create New Category</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-6">Create New Category</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             <Input label="Category Name" placeholder="e.g. Pedagogy" value={newCatName} onChange={e => setNewCatName(e.target.value)} />
             <Input label="Description" placeholder="Quick overview..." value={newCatDesc} onChange={e => setNewCatDesc(e.target.value)} />
             <Button onClick={handleCreateCategory} isLoading={loading} className="gap-2">
-              <Plus className="w-4 h-4" /> Create Category
+              <Plus className="w-4 h-4" /> Create Draft
             </Button>
           </div>
         </div>
 
         <div className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {categories.map(cat => (
-              <div key={cat.id} className="p-6 border border-slate-200 rounded-2xl flex justify-between items-center bg-white hover:border-sbk-blue transition-colors group">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-blue-50 transition-colors">
-                      <LayoutGrid className="w-4 h-4 text-slate-400 group-hover:text-sbk-blue" />
+          {categories.length === 0 ? (
+            <div className="p-12 text-center text-slate-500">
+              No categories yet. Create your first assessment category above.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {categories.map(cat => (
+                <div key={cat.id} className="p-6 border border-slate-200 rounded-lg bg-white hover:border-sbk-primary hover:shadow-md transition-all duration-200 group">
+                  <div className="flex items-start justify-between gap-6 mb-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className="p-3 bg-sbk-primary/10 group-hover:bg-sbk-primary/20 transition-colors rounded-lg flex-shrink-0">
+                        <LayoutGrid className="w-5 h-5 text-sbk-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="font-semibold text-slate-900 text-base">{cat.name}</h3>
+                          {cat.is_published ? (
+                            <Badge variant="live" size="sm" icon={<Globe className="w-3 h-3" />}>
+                              Live
+                            </Badge>
+                          ) : (
+                            <Badge variant="draft" size="sm" icon={<Lock className="w-3 h-3" />}>
+                              Draft
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600">{cat.description}</p>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-slate-900">{cat.name}</h3>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleTogglePublish(cat)}
+                        className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border-2 transition-all whitespace-nowrap ${
+                          cat.is_published
+                            ? 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                            : 'border-sbk-primary/30 text-sbk-primary hover:bg-sbk-primary/5'
+                        }`}
+                      >
+                        {cat.is_published ? 'Unpublish' : 'Publish'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition-colors flex-shrink-0"
+                        title="Delete category"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/category/${cat.id}`)} className="gap-2 flex-shrink-0">
+                        Manage <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm text-slate-500 ml-11">{cat.description}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleDeleteCategory(cat.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/category/${cat.id}`)} className="gap-2">
-                    Manage Sections <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        title="Delete Category"
+        description={`Are you sure you want to delete "${categoryToDelete?.name}"? This will also delete all sections and questions within this category. This action cannot be undone.`}
+        variant="danger"
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteCategory}
+        onCancel={cancelDeleteCategory}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

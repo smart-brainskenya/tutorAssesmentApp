@@ -4,7 +4,9 @@ import { api } from '../../services/api';
 import { Category, Section } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { ArrowLeft, Plus, Trash2, Edit2, ChevronRight, Hash } from 'lucide-react';
+import { Modal } from '../../components/common/Modal';
+import { SectionHeader } from '../../components/common/SectionHeader';
+import { ArrowLeft, Plus, Trash2, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminCategoryDetail() {
@@ -18,6 +20,11 @@ export default function AdminCategoryDetail() {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<'A' | 'B'>('A');
   const [desc, setDesc] = useState('');
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (id) fetchData();
@@ -57,37 +64,52 @@ export default function AdminCategoryDetail() {
     }
   };
 
-  const handleDeleteSection = async (secId: string) => {
-    if (!confirm('Delete this section and all its questions?')) return;
+  const handleDeleteSection = async (section: Section) => {
+    setSectionToDelete(section);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteSection = async () => {
+    if (!sectionToDelete) return;
     try {
-      await api.deleteSection(secId);
-      setSections(sections.filter(s => s.id !== secId));
-      toast.success('Deleted');
+      setIsDeleting(true);
+      await api.deleteSection(sectionToDelete.id);
+      setSections(sections.filter(s => s.id !== sectionToDelete.id));
+      toast.success('Section deleted successfully');
+      setDeleteModalOpen(false);
+      setSectionToDelete(null);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || 'Failed to delete section');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  if (loading) return <div className="p-12 text-center animate-pulse">Loading structural data...</div>;
+  const cancelDeleteSection = () => {
+    setDeleteModalOpen(false);
+    setSectionToDelete(null);
+  };
+
+  if (loading) return <div className="p-12 text-center text-slate-600">Loading category data...</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-      <button onClick={() => navigate('/admin/manage')} className="flex items-center text-sm font-bold text-slate-400 hover:text-sbk-blue transition-colors">
+      <button onClick={() => navigate('/admin/manage')} className="flex items-center text-sm font-semibold text-slate-600 hover:text-sbk-primary transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Categories
       </button>
 
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">{category?.name}</h1>
-        <p className="text-slate-500">{category?.description}</p>
-      </div>
+      <SectionHeader
+        title={category?.name || 'Category'}
+        subtitle={category?.description}
+      />
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-8 bg-slate-50 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Define Assessment Section</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-6">Define Assessment Section</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div className="md:col-span-1">
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Type</label>
-              <select className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold focus:ring-2 focus:ring-sbk-blue outline-none transition-all" value={type} onChange={e => setType(e.target.value as any)}>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-widest mb-2">Type</label>
+              <select className="w-full h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-sbk-primary outline-none transition-all" value={type} onChange={e => setType(e.target.value as any)}>
                 <option value="A">Section A (MCQ / Auto)</option>
                 <option value="B">Section B (Text / Manual)</option>
               </select>
@@ -107,25 +129,25 @@ export default function AdminCategoryDetail() {
         <div className="p-8">
           <div className="space-y-4">
             {sections.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 italic">No sections defined. Create Section A and B to begin.</div>
+              <div className="p-12 text-center text-slate-500">No sections defined. Create Section A and B to begin.</div>
             ) : (
-              sections.map((sec, idx) => (
-                <div key={sec.id} className="p-6 border border-slate-200 rounded-2xl flex justify-between items-center bg-white hover:border-sbk-blue transition-colors group">
-                  <div className="flex items-center gap-6">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl ${sec.section_type === 'A' ? 'bg-blue-50 text-sbk-blue' : 'bg-purple-50 text-purple-600'}`}>
+              sections.map((sec) => (
+                <div key={sec.id} className="p-6 border border-slate-200 rounded-lg flex justify-between items-center bg-white hover:border-slate-300 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg flex-shrink-0 ${sec.section_type === 'A' ? 'bg-sbk-primary/10 text-sbk-primary' : 'bg-purple-100 text-purple-600'}`}>
                       {sec.section_type}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">{sec.title}</h3>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-slate-900">{sec.title}</h3>
                       <p className="text-sm text-slate-500">{sec.section_type === 'A' ? 'Auto-graded Multiple Choice' : 'Manual Review Text Responses'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleDeleteSection(sec.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                  <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                    <button onClick={() => handleDeleteSection(sec)} className="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete section">
                       <Trash2 className="w-5 h-5" />
                     </button>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/admin/section/${sec.id}`)} className="gap-2">
-                      Manage Questions <ChevronRight className="w-4 h-4" />
+                      Manage <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -134,6 +156,18 @@ export default function AdminCategoryDetail() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        title="Delete Section"
+        description={`Are you sure you want to delete "${sectionToDelete?.title}"? This will also delete all questions within this section. This action cannot be undone.`}
+        variant="danger"
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteSection}
+        onCancel={cancelDeleteSection}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

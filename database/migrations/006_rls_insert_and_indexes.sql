@@ -1,13 +1,13 @@
--- SBK Tutor Intelligence - V006 Stabilization & Hardening
--- 1. Atomic Submission RPC
+-- SBK Tutor Intelligence - V006 Stabilization & Hardening (Fixed Signature)
+-- 1. Atomic Submission RPC (Optimized for PostgREST)
 -- 2. RLS Insert Policies for Tutors
 -- 3. Performance Indexes
 -- 4. Lifecycle Transition Enforcement
 
-BEGIN;
-
 -- 1. ATOMIC SUBMISSION RPC
 -- Ensures an attempt and its scores/submissions are created in a single transaction.
+DROP FUNCTION IF EXISTS public.create_and_submit_hybrid_attempt(uuid, jsonb, jsonb);
+
 CREATE OR REPLACE FUNCTION public.create_and_submit_hybrid_attempt(
     p_category_id UUID,
     p_section_a JSONB, -- { "raw_score": int, "max_score": int, "snapshot": jsonb }
@@ -33,19 +33,24 @@ BEGIN
     );
 
     -- Insert Section B Submissions
-    FOR v_item IN SELECT * FROM jsonb_array_elements(p_section_b)
-    LOOP
-        INSERT INTO public.section_b_submissions (attempt_id, question_id, answer_text)
-        VALUES (
-            v_attempt_id, 
-            (v_item->>'question_id')::UUID, 
-            (v_item->>'answer_text')
-        );
-    END LOOP;
+    IF p_section_b IS NOT NULL AND jsonb_array_length(p_section_b) > 0 THEN
+        FOR v_item IN SELECT * FROM jsonb_array_elements(p_section_b)
+        LOOP
+            INSERT INTO public.section_b_submissions (attempt_id, question_id, answer_text)
+            VALUES (
+                v_attempt_id, 
+                (v_item->>'question_id')::UUID, 
+                (v_item->>'answer_text')
+            );
+        END LOOP;
+    END IF;
 
     RETURN v_attempt_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Grant permissions
+GRANT EXECUTE ON FUNCTION public.create_and_submit_hybrid_attempt(uuid, jsonb, jsonb) TO authenticated;
 
 -- 2. FIX RLS INSERT POLICIES
 -- Allow tutors to insert scores/submissions only for their own attempts.
@@ -62,24 +67,21 @@ CREATE POLICY "Tutors insert own B submissions" ON public.section_b_submissions
     );
 
 -- 3. PERFORMANCE INDEXES
--- Indexing high-traffic foreign keys to optimize joins for Review Queue and History.
 CREATE INDEX IF NOT EXISTS idx_section_a_scores_attempt_id ON public.section_a_scores(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_section_b_submissions_attempt_id ON public.section_b_submissions(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_submission_id ON public.reviews(submission_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_user_category ON public.attempts(user_id, category_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_status ON public.attempts(status);
 
--- 4. LIFECYCLE ENFORCEMENT (Data Integrity)
--- Prevent status from being changed back to in_progress once submitted.
+-- 4. LIFECYCLE ENFORCEMENT
 ALTER TABLE public.attempts DROP CONSTRAINT IF EXISTS check_status_flow;
 ALTER TABLE public.attempts ADD CONSTRAINT check_status_flow 
     CHECK (status IN ('in_progress', 'submitted', 'graded'));
 
--- Trigger to prevent manual status tampering by unauthorized updates
+-- Trigger to prevent manual status tampering
 CREATE OR REPLACE FUNCTION public.enforce_attempt_status_progression()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Prevent downgrading from graded/submitted to in_progress
     IF OLD.status = 'submitted' AND NEW.status = 'in_progress' THEN
         RAISE EXCEPTION 'Cannot revert a submitted assessment to in-progress.';
     END IF;
@@ -94,5 +96,3 @@ DROP TRIGGER IF EXISTS trigger_status_enforcement ON public.attempts;
 CREATE TRIGGER trigger_status_enforcement
     BEFORE UPDATE ON public.attempts
     FOR EACH ROW EXECUTE PROCEDURE public.enforce_attempt_status_progression();
-
-COMMIT;

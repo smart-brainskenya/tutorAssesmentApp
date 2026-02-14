@@ -15,7 +15,8 @@ export interface Category {
   id: string;
   name: string;
   description: string;
-  published: boolean;
+  is_published: boolean;
+  published_at?: string;
   created_at: string;
 }
 

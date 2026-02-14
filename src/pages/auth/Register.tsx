@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { ShieldCheck, BarChart2 } from 'lucide-react';
+import { ShieldCheck, Lightbulb } from 'lucide-react';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -60,12 +60,12 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sbk-primary/5 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-3 bg-primary-600 rounded-xl mb-4">
-          <BarChart2 className="w-8 h-8 text-white" />
+        <div className="inline-flex items-center justify-center p-4 bg-sbk-primary/10 rounded-xl mb-4">
+          <Lightbulb className="w-8 h-8 text-sbk-primary" />
         </div>
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
           SBK Tutor Registration
         </h2>
         <p className="mt-2 text-sm text-slate-600">
@@ -134,7 +134,7 @@ export default function Register() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="text-sm font-medium text-primary-600 hover:text-primary-500"
+              className="text-sm font-medium text-sbk-primary hover:text-sbk-depth transition-colors"
             >
               Already registered? Sign in
             </Link>
