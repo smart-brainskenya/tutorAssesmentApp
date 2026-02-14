@@ -47,26 +47,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // 1. Initial session check
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      } else {
+    let mounted = true;
+
+    // Safety timeout: If auth takes longer than 5s, force unauthenticated to unblock UI
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && status === 'INITIALIZING') {
+        console.warn('[AuthContext] Auth initialization timed out. Forcing state to UNAUTHENTICATED.');
         setStatus('UNAUTHENTICATED');
       }
-    };
+    }, 5000);
 
-    initAuth();
-
-    // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`[AuthContext] Auth event: ${event}`);
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         if (session?.user) {
           setUser(session.user);
+          // Only fetch profile if we don't have it or if the user changed
+          // We can optimize this by checking ID, but fetchProfile handles updates
           await fetchProfile(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
@@ -76,7 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, [fetchProfile]);
 
   const value = {

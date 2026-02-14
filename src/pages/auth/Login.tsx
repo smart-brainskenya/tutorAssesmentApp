@@ -7,20 +7,12 @@ import { Lightbulb, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
 
 export default function Login() {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  // Auto-redirect if already logged in
-  useEffect(() => {
-    if (user && profile) {
-      if (profile.role === 'admin') navigate('/admin/dashboard', { replace: true });
-      else navigate('/dashboard', { replace: true });
-    }
-  }, [user, profile, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

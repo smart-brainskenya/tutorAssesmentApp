@@ -56,6 +56,9 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
                     <Link to="/admin/tutors" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <LayoutDashboard className="w-4 h-4" /> Staff
                     </Link>
+                    <Link to="/admin/review" className="text-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                      <FileText className="w-4 h-4" /> Review Queue
+                    </Link>
                   </>
                 )}
               </nav>
