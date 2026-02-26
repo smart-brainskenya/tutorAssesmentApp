@@ -37,8 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(data);
         setStatus('AUTHENTICATED');
-        // Update last login timestamp silently
-        await supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', userId);
+
+        // Update last login timestamp silently if it's more than 24h old or not set
+        const lastLogin = data.last_login ? new Date(data.last_login).getTime() : 0;
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+
+        if (now - lastLogin > twentyFourHours) {
+          await supabase.from('users')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', userId);
+        }
       }
     } catch (err) {
       console.error('[AuthContext] Unexpected fetch error:', err);
