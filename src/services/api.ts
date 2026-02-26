@@ -214,7 +214,15 @@ export const api = {
       .from('attempts')
       .select(`
         *,
-        categories (name)
+        categories (name),
+        section_a_scores (raw_score, max_score),
+        section_b_submissions (
+          id,
+          question_id,
+          answer_text,
+          questions (question_text, points),
+          reviews (score, feedback)
+        )
       `)
       .eq('user_id', userId);
 
