@@ -18,8 +18,45 @@ interface LeaderboardItem {
   omi: number | null;
 }
 
+interface RawAttempt {
+  user_id: string;
+  categories: { name: string } | null;
+  score: number;
+  percentage: number;
+  completed_at: string;
+}
+
+interface RiskTutor {
+  id: string;
+  full_name: string;
+  avgPercentage: number;
+}
+
+interface InactiveTutor {
+  id: string;
+  full_name: string;
+}
+
+interface AdminStats {
+  metrics: {
+    totalTutors: number;
+    activeTutorsCount: number;
+    avgGlobalScore: number;
+    avgGlobalOMI: number;
+    mostPassed: string;
+    mostFailed: string;
+    atRiskCount: number;
+  };
+  leaderboard: LeaderboardItem[];
+  rawAttempts: RawAttempt[];
+  risk: {
+    below60: RiskTutor[];
+    inactive: InactiveTutor[];
+  };
+}
+
 export default function Analytics() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +69,7 @@ export default function Analytics() {
     try {
       setLoading(true);
       const res = await api.getAdminStats();
-      setData(res);
+      setData(res as AdminStats);
     } catch (err) {
       toast.error('Failed to load administrative analytics');
       console.error('Failed to load admin stats:', err);
@@ -52,7 +89,7 @@ export default function Analytics() {
     
     try {
       const headers = ['Tutor', 'Email', 'Category', 'Score', 'Percentage', 'Date'];
-      const rows = data.rawAttempts.map((a: any) => [
+      const rows = data.rawAttempts.map((a) => [
         `"${a.user_id}"`, // Using ID as placeholder for name if not joined
         `"${a.user_id}"`,
         `"${a.categories?.name || 'Unknown'}"`,
@@ -61,7 +98,7 @@ export default function Analytics() {
         `"${new Date(a.completed_at).toLocaleDateString()}"`
       ]);
 
-      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map((e: any) => e.join(','))].join("\n");
+      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map((e) => e.join(','))].join("\n");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       
@@ -73,14 +110,14 @@ export default function Analytics() {
       document.body.removeChild(link);
       
       toast.success('Report downloaded!', { id: toastId });
-    } catch (err) {
+    } catch {
       toast.error('Export failed', { id: toastId });
     } finally {
       setExporting(false);
     }
   };
 
-  const filteredLeaderboard: LeaderboardItem[] = data?.leaderboard?.filter((t: any) => 
+  const filteredLeaderboard: LeaderboardItem[] = data?.leaderboard?.filter((t) =>
     t.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -89,6 +126,12 @@ export default function Analytics() {
     <div className="flex flex-col justify-center items-center py-20 gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-blue"></div>
       <p className="text-slate-500 font-medium">Aggregating global metrics...</p>
+    </div>
+  );
+
+  if (!data) return (
+    <div className="flex justify-center py-20">
+      <p className="text-slate-500">Failed to load analytics data.</p>
     </div>
   );
 
@@ -229,13 +272,13 @@ export default function Analytics() {
                 <p className="text-sm text-slate-500 mt-1">Below 60% performance</p>
               </div>
               <div className="bg-slate-50 rounded-lg overflow-hidden p-4 border border-slate-200">
-                {data.risk.below60.length === 0 ? (
+                {data?.risk.below60.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-sm text-slate-500">✓ No tutors at risk</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {data.risk.below60.map((t: any) => (
+                    {data?.risk.below60.map((t) => (
                       <div key={t.id} className="flex items-center justify-between px-3 py-3 bg-white rounded-lg shadow-sm">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-slate-900 truncate">{t.full_name}</p>
@@ -259,13 +302,13 @@ export default function Analytics() {
                 <p className="text-sm text-slate-500 mt-1">No tests taken</p>
               </div>
               <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden max-h-64 overflow-y-auto">
-                {data.risk.inactive.length === 0 ? (
+                {data?.risk.inactive.length === 0 ? (
                   <div className="p-6 text-center">
                     <p className="text-sm text-slate-500">✓ All tutors active</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {data.risk.inactive.map((t: any) => (
+                    {data?.risk.inactive.map((t) => (
                       <div key={t.id} className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-slate-900">{t.full_name}</p>

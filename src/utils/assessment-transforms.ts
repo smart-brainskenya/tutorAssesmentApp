@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-interface RawCategoryData {
+export interface RawCategoryData {
   sections?: {
     section_type: string;
     questions?: { count: number }[];

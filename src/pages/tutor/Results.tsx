@@ -10,10 +10,20 @@ import { Button } from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
 import { calculateOMI } from '../../utils/omi';
 
+interface Attempt {
+  id: string;
+  category_id: string;
+  completed_at: string;
+  status: 'graded' | 'submitted' | 'in_progress';
+  percentage: number;
+  score: number;
+  categories?: { name: string };
+}
+
 export default function Results() {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [attempts, setAttempts] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +31,7 @@ export default function Results() {
       try {
         if (profile) {
           const data = await api.getTutorAttempts(profile.id);
-          setAttempts(data);
+          setAttempts(data as Attempt[]);
         }
       } catch (error) {
         console.error('Failed to load results:', error);
@@ -39,7 +49,7 @@ export default function Results() {
     const avgScore = attempts.reduce((acc, curr) => acc + curr.percentage, 0) / totalTests;
     
     // Get latest score per category
-    const latestByCategory: Record<string, any> = {};
+    const latestByCategory: Record<string, Attempt> = {};
     attempts.forEach(a => {
       const catId = a.category_id;
       if (!latestByCategory[catId] || new Date(a.completed_at) > new Date(latestByCategory[catId].completed_at)) {

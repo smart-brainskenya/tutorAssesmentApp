@@ -52,8 +52,8 @@ export default function Register() {
         alert('Registration request successful! Please sign in.');
         navigate('/login');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to register');
+    } catch (err) {
+      setError((err as Error).message || 'Failed to register');
     } finally {
       setLoading(false);
     }

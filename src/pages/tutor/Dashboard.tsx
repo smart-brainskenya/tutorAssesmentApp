@@ -16,15 +16,29 @@ type DashboardCategory = Category & {
   estimated_time: number;
 };
 
+interface Attempt {
+  id: string;
+  category_id: string;
+  completed_at: string;
+  status: 'graded' | 'submitted' | 'in_progress';
+  percentage: number;
+  score: number;
+  categories?: { name: string };
+}
+
+interface LocationState {
+  initialView?: 'home' | 'tests' | 'results';
+}
+
 export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState<'home' | 'tests' | 'results'>(
-    (location.state as any)?.initialView || 'home'
+    (location.state as LocationState)?.initialView || 'home'
   );
   const [categories, setCategories] = useState<DashboardCategory[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +49,7 @@ export default function Dashboard() {
           api.getTutorAttempts(profile!.id, 'all')
         ]);
         setCategories(cats as DashboardCategory[]);
-        setAttempts(myAttempts);
+        setAttempts(myAttempts as Attempt[]);
       } catch (error) {
         toast.error('Failed to load dashboard data');
         console.error('Failed to load dashboard:', error);
