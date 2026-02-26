@@ -88,6 +88,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     status,
     isAdmin: profile?.role === 'admin',
+    /**
+     * Signs out the current user.
+     * This invalidates the refresh token on the server and clears the local session.
+     * The `onAuthStateChange` listener will detect the `SIGNED_OUT` event
+     * and update the application state to UNAUTHENTICATED, triggering a redirect to /login.
+     *
+     * Note on Token Lifecycle:
+     * - Access Token: Short-lived (default 1h). Used for RLS policies.
+     * - Refresh Token: Long-lived. Used to obtain new access tokens.
+     * - Logout: Revokes the refresh token immediately. Access tokens are stateless and remain valid until expiry,
+     *   but the client discards them, effectively ending the session.
+     */
     signOut: async () => {
       await supabase.auth.signOut();
     },
