@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { LogOut, LayoutDashboard, FileText, BarChart2, Settings } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../store/AuthContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,11 +10,12 @@ interface LayoutProps {
 }
 
 export function Layout({ children, userRole, userName }: LayoutProps) {
-  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    await signOut();
+    // No manual navigation needed; AuthContext state change will trigger
+    // ProtectedRoute to redirect to /login automatically
   };
 
   return (
