@@ -13,13 +13,15 @@ export const api = {
     if (error) throw error;
     
     return (data as any[]).map(cat => {
+      const totalSections = cat.sections?.length || 0;
       const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
         acc + (sec.questions?.[0]?.count || 0), 0) || 0;
       return {
         ...cat,
+        section_count: totalSections,
         question_count: totalQuestions
       };
-    }) as (Category & { question_count: number })[];
+    }) as (Category & { section_count: number; question_count: number })[];
   },
 
   getPublishedCategories: async () => {
@@ -32,13 +34,15 @@ export const api = {
     if (error) throw error;
     
     return (data as any[]).map(cat => {
+      const totalSections = cat.sections?.length || 0;
       const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
         acc + (sec.questions?.[0]?.count || 0), 0) || 0;
       return {
         ...cat,
+        section_count: totalSections,
         question_count: totalQuestions
       };
-    }) as (Category & { question_count: number })[];
+    }) as (Category & { section_count: number; question_count: number })[];
   },
 
   createCategory: async (name: string, description: string, is_published: boolean = false) => {
@@ -92,12 +96,15 @@ export const api = {
   getSectionsByCategory: async (categoryId: string) => {
     const { data, error } = await supabase
       .from('sections')
-      .select('*')
+      .select('*, questions(count)')
       .eq('category_id', categoryId)
       .order('order_index', { ascending: true });
     
     if (error) throw error;
-    return data as Section[];
+    return (data as any[]).map(sec => ({
+      ...sec,
+      question_count: sec.questions?.[0]?.count || 0
+    })) as (Section & { question_count: number })[];
   },
 
   // Questions

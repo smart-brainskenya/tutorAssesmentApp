@@ -10,13 +10,18 @@ import { Category } from '../../types';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
+interface ExtendedCategory extends Category {
+  section_count: number;
+  question_count: number;
+}
+
 export default function Manage() {
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ExtendedCategory[]>([]);
   const [newCatName, setNewCatName] = useState('');
   const [newCatDesc, setNewCatDesc] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<ExtendedCategory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
@@ -29,7 +34,7 @@ export default function Manage() {
       setLoading(true);
       const data = await api.getCategories();
       setCategories(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load categories');
     } finally {
       setLoading(false);
@@ -41,17 +46,18 @@ export default function Manage() {
     try {
       setLoading(true);
       const newCat = await api.createCategory(newCatName.trim(), newCatDesc.trim(), false);
-      setCategories([newCat, ...categories]);
+      const newCatExtended: ExtendedCategory = { ...newCat, section_count: 0, question_count: 0 };
+      setCategories([newCatExtended, ...categories]);
       setNewCatName(''); setNewCatDesc('');
       toast.success('Category created as Draft');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create category');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTogglePublish = async (cat: Category) => {
+  const handleTogglePublish = async (cat: ExtendedCategory) => {
     const nextState = !cat.is_published;
     try {
       await api.updateCategory(cat.id, { 
@@ -62,12 +68,12 @@ export default function Manage() {
         c.id === cat.id ? { ...c, is_published: nextState } : c
       ));
       toast.success(nextState ? 'Category is now LIVE' : 'Category returned to DRAFT');
-    } catch (err) {
+    } catch {
       toast.error('Failed to update visibility');
     }
   };
 
-  const handleDeleteCategory = async (category: Category) => {
+  const handleDeleteCategory = async (category: ExtendedCategory) => {
     setCategoryToDelete(category);
     setDeleteModalOpen(true);
   };
@@ -81,8 +87,9 @@ export default function Manage() {
       toast.success('Category deleted successfully');
       setDeleteModalOpen(false);
       setCategoryToDelete(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete category');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to delete category';
+      toast.error(msg);
     } finally {
       setIsDeleting(false);
     }
@@ -140,6 +147,15 @@ export default function Manage() {
                           )}
                         </div>
                         <p className="text-sm text-slate-600">{cat.description}</p>
+                        <div className="flex items-center gap-4 mt-3 text-xs font-medium text-slate-500">
+                          <span className="flex items-center gap-1.5">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">{cat.section_count}</span> Sections
+                          </span>
+                          <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                          <span className="flex items-center gap-1.5">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">{cat.question_count}</span> Questions
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
