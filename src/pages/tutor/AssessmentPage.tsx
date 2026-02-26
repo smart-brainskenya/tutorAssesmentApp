@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Alert } from '../../components/common/Alert';
-import { ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trophy, LayoutGrid } from 'lucide-react';
 import { api } from '../../services/api';
 import { Question, Section } from '../../types';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
+import { QuestionNavigator } from '../../components/assessment/QuestionNavigator';
+import { Modal } from '../../components/common/Modal';
 
 export default function AssessmentPage() {
   const { id } = useParams();
@@ -24,6 +26,9 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [score, setScore] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  const [showNavigator, setShowNavigator] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   useEffect(() => {
     if (id) fetchAssessmentData(id);
@@ -226,35 +231,61 @@ export default function AssessmentPage() {
     : false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50">
-      {/* Top Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-slate-100 z-50">
-        <div 
-          className="h-full bg-gradient-to-r from-sbk-blue to-sbk-teal transition-all duration-500"
-          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-        ></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50 flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40 transition-all duration-300">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            {/* Left: Section Info */}
+            <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-sbk-primary/10 flex items-center justify-center text-sbk-primary">
+                    <span className="font-bold text-sm">{currentSection?.section_type || 'A'}</span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate">
+                        Section {currentSection?.order_index || 1}
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 truncate">
+                        {currentSection?.title || 'Assessment'}
+                    </span>
+                </div>
+            </div>
+
+            {/* Middle: Progress (Hidden on small screens) */}
+            <div className="hidden md:flex flex-col flex-1 max-w-xs mx-4">
+                 <div className="flex justify-between text-xs font-medium text-slate-500 mb-1">
+                    <span>Question {currentIndex + 1} of {questions.length}</span>
+                    <span>{Math.round(((currentIndex + 1) / questions.length) * 100)}%</span>
+                 </div>
+                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-gradient-to-r from-sbk-primary to-sbk-depth transition-all duration-500 ease-out"
+                        style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+                    />
+                 </div>
+            </div>
+
+            {/* Right: Navigator Toggle */}
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowNavigator(true)}
+                className="flex items-center gap-2"
+            >
+                <LayoutGrid className="w-4 h-4" />
+                <span className="hidden sm:inline">Questions</span>
+            </Button>
+        </div>
+
+        {/* Mobile Progress Bar */}
+        <div className="md:hidden h-1 bg-slate-100 w-full">
+            <div
+                className="h-full bg-sbk-primary transition-all duration-500"
+                style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+            />
+        </div>
       </div>
 
-      <div className="max-w-3xl mx-auto py-12 px-6">
-        {/* Header - Minimal and Focused */}
-        <div className="mb-10 text-center">
-          {currentSection && (
-             <div className="mb-2">
-                <span className="text-sm font-black text-sbk-primary uppercase tracking-[0.2em] bg-sbk-primary/10 px-4 py-1 rounded-full">
-                  {currentSection.title}
-                </span>
-             </div>
-          )}
-          <div className="inline-flex items-center justify-center px-4 py-1.5 bg-slate-100 rounded-full mb-4">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Question {currentIndex + 1} of {questions.length}</span>
-          </div>
-          <div className="w-48 h-1 bg-slate-100 rounded-full overflow-hidden mx-auto">
-            <div
-              className="h-full bg-gradient-to-r from-sbk-primary to-sbk-depth transition-all duration-500"
-              style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+      <div className="max-w-3xl mx-auto py-12 px-6 w-full flex-1">
 
         {/* Question Container */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 md:p-10 mb-10 focus-visible:ring-2 focus-visible:ring-primary-500">
@@ -323,19 +354,23 @@ export default function AssessmentPage() {
               {/* Word Count and Requirements */}
               <div className="flex justify-between items-center bg-slate-50 rounded-lg p-4 border border-slate-100">
                 <div className="flex items-center gap-4 text-sm">
-                  <div>
-                    <span className="text-slate-600 font-medium">Minimum Words: </span>
-                    <span className="font-bold text-slate-900">{currentQuestion.min_word_count || 0}</span>
-                  </div>
-                  <div className="hidden md:block h-4 border-l border-slate-200"></div>
+                  {(currentQuestion.min_word_count || 0) > 0 && (
+                    <>
+                      <div>
+                        <span className="text-slate-600 font-medium">Minimum Words: </span>
+                        <span className="font-bold text-slate-900">{currentQuestion.min_word_count}</span>
+                      </div>
+                      <div className="hidden md:block h-4 border-l border-slate-200"></div>
+                    </>
+                  )}
                   <div className="md:block">
                     <span className="text-slate-600 font-medium">Your Words: </span>
-                    <span className={`font-bold ${(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-green-600' : 'text-amber-600'}`}>
+                    <span className={`font-bold ${(currentQuestion.min_word_count || 0) > 0 ? ((textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-green-600' : 'text-amber-600') : 'text-slate-900'}`}>
                       {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length) || 0}
                     </span>
                   </div>
                 </div>
-                {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) && (
+                {(currentQuestion.min_word_count || 0) > 0 && (textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) && (
                   <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">✓ Met</span>
                 )}
               </div>
@@ -361,8 +396,8 @@ export default function AssessmentPage() {
           {currentIndex === questions.length - 1 ? (
             <Button 
               size="lg"
-              onClick={handleSubmit}
-              disabled={!isAnswered || submitting || submitted}
+              onClick={() => setShowSubmitModal(true)}
+              disabled={submitting || submitted}
               isLoading={submitting}
               className="px-8 shadow-lg shadow-sbk-blue/20 hover:shadow-xl hover:shadow-sbk-blue/30 transition-all duration-200"
             >
@@ -381,6 +416,39 @@ export default function AssessmentPage() {
           )}
         </div>
       </div>
+
+      <QuestionNavigator
+        questions={questions}
+        currentIndex={currentIndex}
+        mcAnswers={mcAnswers}
+        textAnswers={textAnswers}
+        onNavigate={(index) => setCurrentIndex(index)}
+        isOpen={showNavigator}
+        onClose={() => setShowNavigator(false)}
+      />
+
+      <Modal
+        isOpen={showSubmitModal}
+        title="Submit Assessment?"
+        description={(() => {
+          const unansweredCount = questions.filter(q =>
+            q.question_type === 'multiple_choice'
+              ? !mcAnswers[q.id]
+              : !((textAnswers[q.id]?.trim().length || 0) > 0)
+          ).length;
+
+          return unansweredCount > 0
+            ? `You have ${unansweredCount} unanswered questions. Are you sure you want to submit?`
+            : "Are you sure you want to submit your assessment?";
+        })()}
+        confirmText="Submit Assessment"
+        onConfirm={() => {
+          setShowSubmitModal(false);
+          handleSubmit();
+        }}
+        onCancel={() => setShowSubmitModal(false)}
+        variant="default"
+      />
     </div>
   );
 }
