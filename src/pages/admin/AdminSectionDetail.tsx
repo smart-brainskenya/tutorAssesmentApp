@@ -143,29 +143,29 @@ export default function AdminSectionDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-      <button onClick={() => navigate(`/admin/category/${section?.category_id}`)} className="flex items-center text-sm font-bold text-slate-400 hover:text-sbk-blue transition-colors">
+      <button onClick={() => navigate(`/admin/category/${section?.category_id}`)} className="flex items-center text-sm font-bold text-sbk-slate-400 hover:text-sbk-blue transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Category Structure
       </button>
 
       <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl ${section?.section_type === 'A' ? 'bg-blue-50 text-sbk-blue' : 'bg-purple-50 text-purple-600'}`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl ${section?.section_type === 'A' ? 'bg-sbk-blue/10 text-sbk-blue' : 'bg-sbk-teal/10 text-sbk-teal'}`}>
           {section?.section_type}
         </div>
         <div>
-          <h1 className="text-3xl font-black text-slate-900">{section?.title}</h1>
-          <p className="text-slate-500">Question bank for this section.</p>
+          <h1 className="text-3xl font-black text-sbk-slate-900">{section?.title}</h1>
+          <p className="text-sbk-slate-500">Question bank for this section.</p>
         </div>
       </div>
 
       {/* Question Form */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-8 bg-slate-50 border-b border-slate-100">
+      <div className="bg-white rounded-3xl border border-sbk-slate-200 shadow-sm overflow-hidden">
+        <div className="p-8 bg-sbk-slate-50 border-b border-sbk-slate-100">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-sbk-slate-900">
               {editingQuestion ? 'Edit Question' : `New ${section?.section_type === 'A' ? 'Multiple Choice' : 'Text Input'} Question`}
             </h2>
             {editingQuestion && (
-              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
+              <button onClick={resetForm} className="text-sbk-slate-400 hover:text-sbk-slate-600 flex items-center gap-1 text-sm font-bold">
                 <X className="w-4 h-4" /> Cancel Edit
               </button>
             )}
@@ -185,7 +185,7 @@ export default function AdminSectionDetail() {
                       label={`Option ${label}`} 
                       value={options[label]} 
                       onChange={e => setOptions({...options, [label]: e.target.value})} 
-                      className={correct === label ? 'border-green-500 ring-4 ring-green-50' : ''}
+                      className={correct === label ? 'border-sbk-green-500 ring-4 ring-green-50' : ''}
                     />
                     <input type="radio" name="mc_correct" checked={correct === label} onChange={() => setCorrect(label)} className="absolute top-10 right-3 h-5 w-5 accent-green-500" />
                   </div>
@@ -194,7 +194,7 @@ export default function AdminSectionDetail() {
             ) : (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Rubric Criteria (Manual Review Items)</label>
+                  <label className="text-xs font-black text-sbk-slate-400 uppercase tracking-widest">Rubric Criteria (Manual Review Items)</label>
                   <Button variant="outline" size="sm" onClick={() => setRubric([...rubric, { label: '', max: 5 }])}>
                     <Plus className="w-3 h-3 mr-1" /> Add Criterion
                   </Button>
@@ -207,7 +207,7 @@ export default function AdminSectionDetail() {
                     <div className="w-24"><Input type="number" label="Max Score" value={item.max} onChange={e => {
                       const r = [...rubric]; r[idx].max = parseInt(e.target.value); setRubric(r);
                     }} /></div>
-                    <button onClick={() => setRubric(rubric.filter((_, i) => i !== idx))} className="mb-2 p-2 text-slate-300 hover:text-red-500"><X className="w-4 h-4" /></button>
+                    <button onClick={() => setRubric(rubric.filter((_, i) => i !== idx))} className="mb-2 p-2 text-sbk-slate-300 hover:text-sbk-red-500"><X className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>
@@ -222,28 +222,28 @@ export default function AdminSectionDetail() {
         </div>
 
         <div className="p-8">
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-sbk-slate-100">
             {questions.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 italic">No questions added yet.</div>
+              <div className="py-12 text-center text-sbk-slate-400 italic">No questions added yet.</div>
             ) : (
               questions.map((q, idx) => (
                 <div key={q.id} className="py-6 flex justify-between items-center group">
                   <div className="flex-1 mr-8">
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="text-xs font-bold text-sbk-blue bg-blue-50 px-2 py-0.5 rounded">Q{idx + 1}</span>
-                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{q.points} Points</span>
+                      <span className="text-xs font-bold text-sbk-blue bg-sbk-blue/10 px-2 py-0.5 rounded">Q{idx + 1}</span>
+                      <span className="text-xs font-black text-sbk-slate-400 uppercase tracking-widest">{q.points} Points</span>
                     </div>
-                    <p className="font-bold text-slate-800 text-lg">{q.question_text}</p>
+                    <p className="font-bold text-sbk-slate-800 text-lg">{q.question_text}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => handleEditClick(q)} 
-                      className="p-2 text-slate-400 hover:text-sbk-blue hover:bg-blue-50 rounded-lg transition-all"
+                      className="p-2 text-sbk-slate-400 hover:text-sbk-blue hover:bg-sbk-blue/10 rounded-lg transition-all"
                       title="Edit question"
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
-                    <button onClick={() => handleDeleteQuestion(q)} className="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete question">
+                    <button onClick={() => handleDeleteQuestion(q)} className="p-2 text-sbk-slate-300 hover:text-sbk-red-500 transition-colors" title="Delete question">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>

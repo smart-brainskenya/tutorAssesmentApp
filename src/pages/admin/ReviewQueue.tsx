@@ -82,29 +82,29 @@ export default function ReviewQueue() {
 
   if (loading) return (
     <div className="flex justify-center py-12">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sbk-blue"></div>
     </div>
   );
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Manual Review Queue</h1>
-        <p className="text-slate-500 mt-1">FIFO: Oldest submissions appear first.</p>
+        <h1 className="text-2xl font-bold text-sbk-slate-900">Manual Review Queue</h1>
+        <p className="text-sbk-slate-500 mt-1">FIFO: Oldest submissions appear first.</p>
       </div>
 
       {queue.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <div className="inline-flex items-center justify-center p-4 bg-green-50 rounded-full mb-4">
-            <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className="bg-white rounded-2xl border border-sbk-slate-200 p-12 text-center">
+          <div className="inline-flex items-center justify-center p-4 bg-sbk-green-50 rounded-full mb-4">
+            <CheckCircle className="w-8 h-8 text-sbk-green-500" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Queue Clear!</h2>
-          <p className="text-slate-500">All Section B submissions have been reviewed.</p>
+          <h2 className="text-xl font-bold text-sbk-slate-900">Queue Clear!</h2>
+          <p className="text-sbk-slate-500">All Section B submissions have been reviewed.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-sbk-slate-200 shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+            <thead className="bg-sbk-slate-50 text-sbk-slate-500 text-xs font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">Submitted At</th>
                 <th className="px-6 py-4">Tutor</th>
@@ -113,23 +113,23 @@ export default function ReviewQueue() {
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-sbk-slate-100">
               {queue.map((item) => (
-                <tr key={item.attempt_id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                <tr key={item.attempt_id} className="hover:bg-sbk-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-sm text-sbk-slate-600 font-medium">
                     {format(new Date(item.submitted_at), 'MMM dd, HH:mm')}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                        <User className="w-4 h-4 text-slate-400" />
+                      <div className="w-8 h-8 rounded-full bg-sbk-slate-100 flex items-center justify-center">
+                        <User className="w-4 h-4 text-sbk-slate-400" />
                       </div>
-                      <span className="font-semibold text-slate-900">{item.tutor_name}</span>
+                      <span className="font-semibold text-sbk-slate-900">{item.tutor_name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{item.category_name}</td>
+                  <td className="px-6 py-4 text-sm text-sbk-slate-600">{item.category_name}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sbk-amber-100 text-sbk-amber-800">
                       {item.pending_questions} items
                     </span>
                   </td>
@@ -151,57 +151,57 @@ export default function ReviewQueue() {
 
       {/* Review Modal */}
       {selectedAttempt && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-sbk-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="px-8 py-6 border-b border-sbk-slate-100 flex items-center justify-between bg-sbk-slate-50">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Grading: {selectedAttempt.attempt.tutor_name || 'Tutor Attempt'}</h2>
-                <p className="text-sm text-slate-500">{selectedAttempt.attempt.categories.name}</p>
+                <h2 className="text-xl font-bold text-sbk-slate-900">Grading: {selectedAttempt.attempt.tutor_name || 'Tutor Attempt'}</h2>
+                <p className="text-sm text-sbk-slate-500">{selectedAttempt.attempt.categories.name}</p>
               </div>
-              <button onClick={() => setSelectedAttempt(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="w-6 h-6 text-slate-500" />
+              <button onClick={() => setSelectedAttempt(null)} className="p-2 hover:bg-sbk-slate-200 rounded-full transition-colors">
+                <X className="w-6 h-6 text-sbk-slate-500" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10">
               {/* Section A Summary */}
-              <section className="bg-blue-50 border border-blue-100 rounded-xl p-6">
+              <section className="bg-sbk-blue/10 border border-sbk-blue/20 rounded-xl p-6">
                 <h3 className="text-sm font-black text-sbk-blue uppercase tracking-widest mb-4 flex items-center gap-2">
                   <ClipboardCheck className="w-4 h-4" /> Section A Results (Auto-Graded)
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase">Points Earned</p>
-                    <p className="text-2xl font-bold text-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.raw_score}</p>
+                    <p className="text-xs text-sbk-slate-500 font-bold uppercase">Points Earned</p>
+                    <p className="text-2xl font-bold text-sbk-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.raw_score}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase">Max Possible</p>
-                    <p className="text-2xl font-bold text-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.max_score}</p>
+                    <p className="text-xs text-sbk-slate-500 font-bold uppercase">Max Possible</p>
+                    <p className="text-2xl font-bold text-sbk-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.max_score}</p>
                   </div>
                 </div>
               </section>
 
               {/* Section B Responses */}
               <section className="space-y-8">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <h3 className="text-sm font-black text-sbk-slate-900 uppercase tracking-widest flex items-center gap-2">
                   <BookOpen className="w-4 h-4" /> Section B: Manual Evaluation
                 </h3>
                 
                 {selectedAttempt.submissions.map((sub: any, idx: number) => (
-                  <div key={sub.id} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                      <p className="text-sm font-bold text-slate-700">Question {idx + 1}</p>
-                      <p className="text-lg font-bold text-slate-900 mt-1">{sub.questions.question_text}</p>
+                  <div key={sub.id} className="border border-sbk-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <div className="bg-sbk-slate-50 px-6 py-4 border-b border-sbk-slate-200">
+                      <p className="text-sm font-bold text-sbk-slate-700">Question {idx + 1}</p>
+                      <p className="text-lg font-bold text-sbk-slate-900 mt-1">{sub.questions.question_text}</p>
                     </div>
                     <div className="p-6 space-y-6">
-                      <div className="bg-slate-50 rounded-lg p-5 border-l-4 border-sbk-blue">
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-2">Tutor Response</p>
-                        <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">{sub.answer_text}</p>
+                      <div className="bg-sbk-slate-50 rounded-lg p-5 border-l-4 border-sbk-blue">
+                        <p className="text-xs font-bold text-sbk-slate-400 uppercase mb-2">Tutor Response</p>
+                        <p className="text-sbk-slate-800 whitespace-pre-wrap leading-relaxed">{sub.answer_text}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">
+                          <label className="block text-sm font-bold text-sbk-slate-700 mb-2">
                             Assign Score (Max {sub.questions.points || 10})
                           </label>
                           <input 
@@ -210,18 +210,18 @@ export default function ReviewQueue() {
                             min={0}
                             value={scores[sub.id]}
                             onChange={(e) => handleScoreChange(sub.id, parseInt(e.target.value) || 0)}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-sbk-blue outline-none transition-all font-bold text-lg"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue outline-none transition-all font-bold text-lg"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">
+                          <label className="block text-sm font-bold text-sbk-slate-700 mb-2">
                             Feedback (Optional)
                           </label>
                           <textarea 
                             value={feedback[sub.id]}
                             onChange={(e) => handleFeedbackChange(sub.id, e.target.value)}
                             placeholder="Constructive feedback for the tutor..."
-                            className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-sbk-blue outline-none transition-all h-24 resize-none"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue outline-none transition-all h-24 resize-none"
                           />
                         </div>
                       </div>
@@ -231,8 +231,8 @@ export default function ReviewQueue() {
               </section>
             </div>
 
-            <div className="px-8 py-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-600">
+            <div className="px-8 py-6 border-t border-sbk-slate-100 bg-sbk-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sbk-amber-600">
                 <AlertCircle className="w-5 h-5" />
                 <span className="text-sm font-bold uppercase tracking-tight">Final check required before submission</span>
               </div>

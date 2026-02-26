@@ -107,9 +107,9 @@ export default function Manage() {
         subtitle="Define top-level assessment topics"
       />
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-8 bg-slate-50 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">Create New Category</h2>
+      <div className="bg-white rounded-lg border border-sbk-slate-200 shadow-sm overflow-hidden">
+        <div className="p-8 bg-sbk-slate-50 border-b border-sbk-slate-100">
+          <h2 className="text-lg font-semibold text-sbk-slate-900 mb-6">Create New Category</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             <Input label="Category Name" placeholder="e.g. Pedagogy" value={newCatName} onChange={e => setNewCatName(e.target.value)} />
             <Input label="Description" placeholder="Quick overview..." value={newCatDesc} onChange={e => setNewCatDesc(e.target.value)} />
@@ -121,13 +121,13 @@ export default function Manage() {
 
         <div className="p-8">
           {categories.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
+            <div className="p-12 text-center text-sbk-slate-500">
               No categories yet. Create your first assessment category above.
             </div>
           ) : (
             <div className="space-y-4">
               {categories.map(cat => (
-                <div key={cat.id} className="p-6 border border-slate-200 rounded-lg bg-white hover:border-sbk-primary hover:shadow-md transition-all duration-200 group">
+                <div key={cat.id} className="p-6 border border-sbk-slate-200 rounded-lg bg-white hover:border-sbk-primary hover:shadow-md transition-all duration-200 group">
                   <div className="flex items-start justify-between gap-6 mb-4">
                     <div className="flex items-start gap-4 flex-1 min-w-0">
                       <div className="p-3 bg-sbk-primary/10 group-hover:bg-sbk-primary/20 transition-colors rounded-lg flex-shrink-0">
@@ -135,7 +135,7 @@ export default function Manage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-slate-900 text-base">{cat.name}</h3>
+                          <h3 className="font-semibold text-sbk-slate-900 text-base">{cat.name}</h3>
                           {cat.is_published ? (
                             <Badge variant="live" size="sm" icon={<Globe className="w-3 h-3" />}>
                               Live
@@ -146,14 +146,14 @@ export default function Manage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-slate-600">{cat.description}</p>
-                        <div className="flex items-center gap-4 mt-3 text-xs font-medium text-slate-500">
+                        <p className="text-sm text-sbk-slate-600">{cat.description}</p>
+                        <div className="flex items-center gap-4 mt-3 text-xs font-medium text-sbk-slate-500">
                           <span className="flex items-center gap-1.5">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">{cat.section_count}</span> Sections
+                            <span className="bg-sbk-slate-100 px-2 py-0.5 rounded text-sbk-slate-700 font-bold">{cat.section_count}</span> Sections
                           </span>
-                          <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                          <span className="w-1 h-1 bg-sbk-slate-300 rounded-full" />
                           <span className="flex items-center gap-1.5">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">{cat.question_count}</span> Questions
+                            <span className="bg-sbk-slate-100 px-2 py-0.5 rounded text-sbk-slate-700 font-bold">{cat.question_count}</span> Questions
                           </span>
                         </div>
                       </div>
@@ -163,7 +163,7 @@ export default function Manage() {
                         onClick={() => handleTogglePublish(cat)}
                         className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border-2 transition-all whitespace-nowrap ${
                           cat.is_published
-                            ? 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                            ? 'border-sbk-slate-200 text-sbk-slate-400 hover:bg-sbk-slate-50'
                             : 'border-sbk-primary/30 text-sbk-primary hover:bg-sbk-primary/5'
                         }`}
                       >
@@ -171,7 +171,7 @@ export default function Manage() {
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(cat)}
-                        className="p-2 text-slate-300 hover:text-red-500 transition-colors flex-shrink-0"
+                        className="p-2 text-sbk-slate-300 hover:text-sbk-red-500 transition-colors flex-shrink-0"
                         title="Delete category"
                       >
                         <Trash2 className="w-5 h-5" />
