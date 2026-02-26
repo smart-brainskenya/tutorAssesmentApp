@@ -209,16 +209,20 @@ export const api = {
 
 
 
-  getTutorAttempts: async (userId: string) => {
-    const { data, error } = await supabase
+  getTutorAttempts: async (userId: string, filterStatus: 'graded' | 'all' = 'graded') => {
+    let query = supabase
       .from('attempts')
       .select(`
         *,
         categories (name)
       `)
-      .eq('user_id', userId)
-      .eq('status', 'graded') // Only show finalized results to tutors
-      .order('completed_at', { ascending: false });
+      .eq('user_id', userId);
+
+    if (filterStatus === 'graded') {
+      query = query.eq('status', 'graded'); // Only show finalized results to tutors by default
+    }
+
+    const { data, error } = await query.order('completed_at', { ascending: false });
 
     if (error) throw error;
     return data;
