@@ -2,19 +2,16 @@ import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
 import { 
-  ClipboardCheck, User, BookOpen, 
-  CheckCircle, AlertCircle, ChevronRight, X 
+  User, CheckCircle, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import ReviewModal from '../../components/admin/ReviewModal';
 
 export default function ReviewQueue() {
   const [queue, setQueue] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAttempt, setSelectedAttempt] = useState<any>(null);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [scores, setScores] = useState<Record<string, number>>({});
-  const [feedback, setFeedback] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchQueue();
@@ -36,47 +33,25 @@ export default function ReviewQueue() {
     try {
       const data = await api.getAttemptForReview(attemptId);
       setSelectedAttempt(data);
-      // Initialize scores
-      const initialScores: Record<string, number> = {};
-      data.submissions.forEach((s: any) => {
-        initialScores[s.id] = 0;
-      });
-      setScores(initialScores);
     } catch (err) {
       toast.error('Failed to load attempt details');
     }
   };
 
-  const handleScoreChange = (submissionId: string, score: number) => {
-    setScores({ ...scores, [submissionId]: score });
-  };
-
-  const handleFeedbackChange = (submissionId: string, text: string) => {
-    setFeedback({ ...feedback, [submissionId]: text });
-  };
-
-  const handleSubmitReview = async () => {
+  const handleReviewSubmit = async (reviews: { submission_id: string, score: number, feedback: string }[]) => {
     if (!selectedAttempt) return;
     
-    setReviewLoading(true);
     const toastId = toast.loading('Finalizing review...');
 
     try {
-      const reviewPayload = selectedAttempt.submissions.map((s: any) => ({
-        submission_id: s.id,
-        score: scores[s.id] || 0,
-        feedback: feedback[s.id] || ''
-      }));
-
-      await api.submitReview(selectedAttempt.attempt.id, reviewPayload);
+      await api.submitReview(selectedAttempt.attempt.id, reviews);
       
       toast.success('Review finalized and tutor graded!', { id: toastId });
       setSelectedAttempt(null);
       fetchQueue();
     } catch (err) {
       toast.error('Failed to submit review', { id: toastId });
-    } finally {
-      setReviewLoading(false);
+      throw err;
     }
   };
 
@@ -149,106 +124,12 @@ export default function ReviewQueue() {
         </div>
       )}
 
-      {/* Review Modal */}
       {selectedAttempt && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Grading: {selectedAttempt.attempt.tutor_name || 'Tutor Attempt'}</h2>
-                <p className="text-sm text-slate-500">{selectedAttempt.attempt.categories.name}</p>
-              </div>
-              <button onClick={() => setSelectedAttempt(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="w-6 h-6 text-slate-500" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-10">
-              {/* Section A Summary */}
-              <section className="bg-blue-50 border border-blue-100 rounded-xl p-6">
-                <h3 className="text-sm font-black text-sbk-blue uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4" /> Section A Results (Auto-Graded)
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase">Points Earned</p>
-                    <p className="text-2xl font-bold text-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.raw_score}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase">Max Possible</p>
-                    <p className="text-2xl font-bold text-slate-900">{selectedAttempt.attempt.section_a_scores[0]?.max_score}</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Section B Responses */}
-              <section className="space-y-8">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" /> Section B: Manual Evaluation
-                </h3>
-                
-                {selectedAttempt.submissions.map((sub: any, idx: number) => (
-                  <div key={sub.id} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                      <p className="text-sm font-bold text-slate-700">Question {idx + 1}</p>
-                      <p className="text-lg font-bold text-slate-900 mt-1">{sub.questions.question_text}</p>
-                    </div>
-                    <div className="p-6 space-y-6">
-                      <div className="bg-slate-50 rounded-lg p-5 border-l-4 border-sbk-blue">
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-2">Tutor Response</p>
-                        <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">{sub.answer_text}</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">
-                            Assign Score (Max {sub.questions.points || 10})
-                          </label>
-                          <input 
-                            type="number" 
-                            max={sub.questions.points || 10}
-                            min={0}
-                            value={scores[sub.id]}
-                            onChange={(e) => handleScoreChange(sub.id, parseInt(e.target.value) || 0)}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-sbk-blue outline-none transition-all font-bold text-lg"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">
-                            Feedback (Optional)
-                          </label>
-                          <textarea 
-                            value={feedback[sub.id]}
-                            onChange={(e) => handleFeedbackChange(sub.id, e.target.value)}
-                            placeholder="Constructive feedback for the tutor..."
-                            className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-sbk-blue outline-none transition-all h-24 resize-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </section>
-            </div>
-
-            <div className="px-8 py-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-600">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm font-bold uppercase tracking-tight">Final check required before submission</span>
-              </div>
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setSelectedAttempt(null)}>Cancel</Button>
-                <Button 
-                  onClick={handleSubmitReview}
-                  isLoading={reviewLoading}
-                  className="px-10"
-                >
-                  Approve Review & Grade
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReviewModal
+          attempt={selectedAttempt}
+          onClose={() => setSelectedAttempt(null)}
+          onSubmit={handleReviewSubmit}
+        />
       )}
     </div>
   );
