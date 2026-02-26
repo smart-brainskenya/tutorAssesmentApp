@@ -1,48 +1,43 @@
 import { supabase } from '../lib/supabase';
 import { Category, Question, User, Section } from '../types';
 import { calculateOMI } from '../utils/omi';
+import { transformCategoryData } from '../utils/assessment-transforms';
 
 export const api = {
   // Categories
   getCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*, sections(questions(count))')
+      .select('*, sections(questions(count), section_type)')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    return (data as any[]).map(cat => {
-      const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
-        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
-      return {
-        ...cat,
-        section_count: totalSections,
-        question_count: totalQuestions
-      };
-    }) as (Category & { section_count: number; question_count: number })[];
+    return transformCategoryData(data as any[]) as (Category & {
+      section_count: number;
+      question_count: number;
+      section_a_count: number;
+      section_b_count: number;
+      estimated_time: number;
+    })[];
   },
 
   getPublishedCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*, sections(questions(count))')
+      .select('*, sections(questions(count), section_type)')
       .eq('is_published', true)
       .order('published_at', { ascending: false });
     
     if (error) throw error;
     
-    return (data as any[]).map(cat => {
-      const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
-        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
-      return {
-        ...cat,
-        section_count: totalSections,
-        question_count: totalQuestions
-      };
-    }) as (Category & { section_count: number; question_count: number })[];
+    return transformCategoryData(data as any[]) as (Category & {
+      section_count: number;
+      question_count: number;
+      section_a_count: number;
+      section_b_count: number;
+      estimated_time: number;
+    })[];
   },
 
   createCategory: async (name: string, description: string, is_published: boolean = false) => {
@@ -219,7 +214,7 @@ export const api = {
       .eq('user_id', userId);
 
     if (filterStatus === 'graded') {
-      query = query.eq('status', 'graded'); // Only show finalized results to tutors by default
+      query = query.eq('status', 'graded');
     }
 
     const { data, error } = await query.order('completed_at', { ascending: false });
