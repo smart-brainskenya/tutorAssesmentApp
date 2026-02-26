@@ -7,9 +7,9 @@ This document outlines the steps to deploy the SBK Tutor Intelligence System to 
 1.  **Create Project**: Log in to [Supabase](https://supabase.com) and create a new project.
 2. **Initialize Database**:
     -   Open the **SQL Editor**.
-    -   Run the migration scripts found in `database/migrations/` in sequential order (001, 002, 003, 004, 005). These scripts:
+    -   Run the migration scripts found in `database/migrations/` in sequential order (001, 002, 003, 004, 005, 006, 007, 008). These scripts:
         -   Set up the core schema, hybrid model, and review queue.
-        -   Configures Row Level Security (RLS) policies using non-recursive JWT checks.
+        -   Configures Row Level Security (RLS) policies using non-recursive JWT checks (v004) and subsequently fixes admin visibility issues (v008).
         -   Creates the automatic profile trigger for new signups.
 
 3.  **URL Configuration**:
