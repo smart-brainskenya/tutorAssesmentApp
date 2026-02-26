@@ -9,11 +9,15 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { ArrowLeft, Plus, Trash2, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface ExtendedSection extends Section {
+  question_count: number;
+}
+
 export default function AdminCategoryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [category, setCategory] = useState<Category | null>(null);
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sections, setSections] = useState<ExtendedSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form State
@@ -23,28 +27,29 @@ export default function AdminCategoryDetail() {
 
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
+  const [sectionToDelete, setSectionToDelete] = useState<ExtendedSection | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [catData, secData] = await Promise.all([
+          api.getCategoryById(id!),
+          api.getSectionsByCategory(id!)
+        ]);
+        setCategory(catData);
+        // Ensure secData has question_count (handled by api update)
+        setSections(secData as ExtendedSection[]);
+      } catch {
+        toast.error('Failed to load category data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id) fetchData();
   }, [id]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [catData, secData] = await Promise.all([
-        api.getCategoryById(id!),
-        api.getSectionsByCategory(id!)
-      ]);
-      setCategory(catData);
-      setSections(secData);
-    } catch (err) {
-      toast.error('Failed to load category data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateSection = async () => {
     if (!title.trim()) return toast.error('Title required');
@@ -56,15 +61,17 @@ export default function AdminCategoryDetail() {
         description: desc.trim(),
         order_index: sections.length
       });
-      setSections([...sections, newSection]);
+      const newSectionExtended: ExtendedSection = { ...newSection, question_count: 0 };
+      setSections([...sections, newSectionExtended]);
       setTitle(''); setDesc('');
       toast.success('Section created');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create section');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to create section';
+      toast.error(msg);
     }
   };
 
-  const handleDeleteSection = async (section: Section) => {
+  const handleDeleteSection = async (section: ExtendedSection) => {
     setSectionToDelete(section);
     setDeleteModalOpen(true);
   };
@@ -78,8 +85,9 @@ export default function AdminCategoryDetail() {
       toast.success('Section deleted successfully');
       setDeleteModalOpen(false);
       setSectionToDelete(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete section');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete section';
+      toast.error(msg);
     } finally {
       setIsDeleting(false);
     }
@@ -109,7 +117,7 @@ export default function AdminCategoryDetail() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div className="md:col-span-1">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-widest mb-2">Type</label>
-              <select className="w-full h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-sbk-primary outline-none transition-all" value={type} onChange={e => setType(e.target.value as any)}>
+              <select className="w-full h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-sbk-primary outline-none transition-all" value={type} onChange={e => setType(e.target.value as 'A' | 'B')}>
                 <option value="A">Section A (MCQ / Auto)</option>
                 <option value="B">Section B (Text / Manual)</option>
               </select>
@@ -140,6 +148,7 @@ export default function AdminCategoryDetail() {
                     <div className="min-w-0">
                       <h3 className="font-semibold text-slate-900">{sec.title}</h3>
                       <p className="text-sm text-slate-500">{sec.section_type === 'A' ? 'Auto-graded Multiple Choice' : 'Manual Review Text Responses'}</p>
+                      <p className="text-xs text-slate-400 font-medium mt-1">{sec.question_count} Questions</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 ml-4 flex-shrink-0">
