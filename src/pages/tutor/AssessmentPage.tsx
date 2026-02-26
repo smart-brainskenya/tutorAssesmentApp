@@ -54,7 +54,7 @@ export default function AssessmentPage() {
       setQuestions(allQuestions);
     } catch (err: any) {
       setError('Failed to load assessment. ' + err.message);
-      toast.error('Network error. Could not fetch assessment data.');
+      toast.error('Gremlins in the wires! 👾 Could not fetch assessment data.');
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function AssessmentPage() {
     if (!profile || !id || submitting) return;
 
     setSubmitting(true);
-    const toastId = toast.loading('Submitting your assessment...');
+    const toastId = toast.loading('One Momment✍️');
 
     try {
       // 1. Logic for Section A (Auto-grading MCQ)
@@ -116,7 +116,7 @@ export default function AssessmentPage() {
 
       setScore(sectionARawScore);
       setSubmitted(true);
-      toast.success('Assessment submitted for review!', { id: toastId });
+      toast.success('Assessment launched! 🚀 Fingers crossed!', { id: toastId });
 
       if ((sectionARawScore / sectionAMaxScore) >= 0.9) {
         confetti({
@@ -128,7 +128,7 @@ export default function AssessmentPage() {
       }
     } catch (err: any) {
       console.error('Failed to submit attempt:', err);
-      toast.error(err.message || 'Failed to submit. Please try again.', { id: toastId });
+      toast.error(err.message || 'Submission blocked by the firewall of doom! 🛡️ Try again.', { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +137,7 @@ export default function AssessmentPage() {
   if (loading) return (
     <div className="flex flex-col justify-center items-center min-h-[50vh] gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-primary"></div>
-      <p className="text-slate-600 font-medium">Preparing questions...</p>
+      <p className="text-slate-600 font-medium">One Momment✍️</p>
     </div>
   );
 

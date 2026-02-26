@@ -26,7 +26,7 @@ export default function ReviewQueue() {
       const data = await api.getReviewQueue();
       setQueue(data);
     } catch (err) {
-      toast.error('Failed to load review queue');
+      toast.error('The queue is shy today. 🙈 Failed to load.');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function ReviewQueue() {
       });
       setScores(initialScores);
     } catch (err) {
-      toast.error('Failed to load attempt details');
+      toast.error('Attempt details went missing! 🕵️‍♂️');
     }
   };
 
@@ -59,7 +59,7 @@ export default function ReviewQueue() {
     if (!selectedAttempt) return;
     
     setReviewLoading(true);
-    const toastId = toast.loading('Finalizing review...');
+    const toastId = toast.loading('One Momment✍️');
 
     try {
       const reviewPayload = selectedAttempt.submissions.map((s: any) => ({
@@ -70,19 +70,20 @@ export default function ReviewQueue() {
 
       await api.submitReview(selectedAttempt.attempt.id, reviewPayload);
       
-      toast.success('Review finalized and tutor graded!', { id: toastId });
+      toast.success('Review done! Justice served. 👩‍⚖️', { id: toastId });
       setSelectedAttempt(null);
       fetchQueue();
     } catch (err) {
-      toast.error('Failed to submit review', { id: toastId });
+      toast.error('Gavel broken! 🔨 Failed to submit review.', { id: toastId });
     } finally {
       setReviewLoading(false);
     }
   };
 
   if (loading) return (
-    <div className="flex justify-center py-12">
+    <div className="flex flex-col items-center justify-center py-12">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
     </div>
   );
 

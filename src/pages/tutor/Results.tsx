@@ -79,8 +79,9 @@ export default function Results() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="flex flex-col justify-center items-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
       </div>
     );
   }

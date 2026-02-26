@@ -51,12 +51,12 @@ export default function Register() {
       
       if (data.user) {
         setLoading(false);
-        toast.success('Registration request successful! Please sign in.');
+        toast.success('Welcome to the club! 🚀 Please sign in.');
         navigate('/login');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to register');
-      toast.error(err.message || 'Failed to register');
+      toast.error(err.message || 'Computer says no. 🤖 Failed to register');
     } finally {
       setLoading(false);
     }
