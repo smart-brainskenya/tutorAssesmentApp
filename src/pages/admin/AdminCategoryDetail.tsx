@@ -42,7 +42,7 @@ export default function AdminCategoryDetail() {
         // Ensure secData has question_count (handled by api update)
         setSections(secData as ExtendedSection[]);
       } catch {
-        toast.error('Failed to load category data');
+        toast.error('Category data is playing hide and seek. 🫣');
       } finally {
         setLoading(false);
       }
@@ -52,7 +52,7 @@ export default function AdminCategoryDetail() {
   }, [id]);
 
   const handleCreateSection = async () => {
-    if (!title.trim()) return toast.error('Title required');
+    if (!title.trim()) return toast.error('A nameless category? I don\'t think so. 🤨 Title required.');
     try {
       const newSection = await api.createSection({
         category_id: id!,
@@ -64,7 +64,7 @@ export default function AdminCategoryDetail() {
       const newSectionExtended: ExtendedSection = { ...newSection, question_count: 0 };
       setSections([...sections, newSectionExtended]);
       setTitle(''); setDesc('');
-      toast.success('Section created');
+      toast.success('New section born! 👶');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create section';
       toast.error(msg);
@@ -82,7 +82,7 @@ export default function AdminCategoryDetail() {
       setIsDeleting(true);
       await api.deleteSection(sectionToDelete.id);
       setSections(sections.filter(s => s.id !== sectionToDelete.id));
-      toast.success('Section deleted successfully');
+      toast.success('Section sent to the void. 🕳️');
       setDeleteModalOpen(false);
       setSectionToDelete(null);
     } catch (err) {
@@ -98,7 +98,7 @@ export default function AdminCategoryDetail() {
     setSectionToDelete(null);
   };
 
-  if (loading) return <div className="p-12 text-center text-slate-600">Loading category data...</div>;
+  if (loading) return <div className="p-12 text-center text-slate-600">One Momment✍️</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
