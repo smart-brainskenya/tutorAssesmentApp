@@ -10,29 +10,29 @@ interface BadgeProps {
 export function Badge({ variant = 'draft', children, icon, size = 'md' }: BadgeProps) {
   const variantStyles = {
     live: {
-      bg: 'bg-green-50',
-      text: 'text-green-700',
-      border: 'border-green-200',
+      bg: 'bg-sbk-green-50',
+      text: 'text-sbk-green-700',
+      border: 'border-sbk-green-200',
     },
     draft: {
-      bg: 'bg-slate-100',
-      text: 'text-slate-600',
-      border: 'border-slate-200',
+      bg: 'bg-sbk-slate-100',
+      text: 'text-sbk-slate-600',
+      border: 'border-sbk-slate-200',
     },
     danger: {
-      bg: 'bg-red-50',
-      text: 'text-red-700',
-      border: 'border-red-200',
+      bg: 'bg-sbk-red-50',
+      text: 'text-sbk-red-700',
+      border: 'border-sbk-red-200',
     },
     success: {
-      bg: 'bg-green-50',
-      text: 'text-green-700',
-      border: 'border-green-200',
+      bg: 'bg-sbk-green-50',
+      text: 'text-sbk-green-700',
+      border: 'border-sbk-green-200',
     },
     warning: {
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-      border: 'border-amber-200',
+      bg: 'bg-sbk-amber-50',
+      text: 'text-sbk-amber-700',
+      border: 'border-sbk-amber-200',
     },
   };
 

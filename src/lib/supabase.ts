@@ -26,7 +26,7 @@ try {
       isServiceRole = true;
     }
   }
-} catch (error) {
+} catch {
   // If decoding fails, we log a warning but don't block unless it's a confirmed service_role
   console.warn('[Supabase] Could not verify key role. Ensure RLS is enabled on your tables.');
 }
