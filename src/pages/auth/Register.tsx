@@ -52,8 +52,9 @@ export default function Register() {
         toast.success('Welcome to the club! 🚀 Please sign in.');
         navigate('/login');
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Computer says no. 🤖 Failed to register');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Computer says no. 🤖 Failed to register';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

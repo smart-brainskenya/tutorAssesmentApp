@@ -32,7 +32,8 @@ export default function Tutors() {
       setLoading(true);
       const data = await api.getAllTutors();
       setTutors(data);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Where did everyone go? 🤷 Failed to load tutors.');
     } finally {
       setLoading(false);
@@ -44,7 +45,8 @@ export default function Tutors() {
       const updated = await api.updateUserAccount(user.id, { is_active: !user.is_active });
       toast.success(`${updated.is_active ? 'User awakened! ☀️' : 'User put to sleep. 🌙'}`);
       fetchTutors();
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Computer says no. 🤖 Operation failed.');
     }
   };
@@ -57,7 +59,8 @@ export default function Tutors() {
       await api.updateUserAccount(user.id, { role: newRole });
       toast.success(`Level up! 🍄 Role updated to ${newRole}`);
       fetchTutors();
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Promotion denied. 🛑 Failed to update role.');
     }
   };
@@ -66,7 +69,8 @@ export default function Tutors() {
     try {
       await api.triggerPasswordReset(email);
       toast.success('Carrier pigeon dispatched! 🐦 Password reset sent.');
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Pigeon got lost. 🦅 Failed to send reset link.');
     }
   };
@@ -75,7 +79,8 @@ export default function Tutors() {
     try {
       await api.unlockTutorRetake(userId);
       toast.success('Unshackled! ⛓️‍💥 Retake lock cleared.');
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Keys missing! 🔑 Failed to unlock.');
     }
   };

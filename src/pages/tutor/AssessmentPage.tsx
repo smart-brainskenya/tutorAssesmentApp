@@ -52,8 +52,9 @@ export default function AssessmentPage() {
         return;
       }
       setQuestions(allQuestions);
-    } catch (err: any) {
-      setError('Failed to load assessment. ' + err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError('Failed to load assessment. ' + message);
       toast.error('Gremlins in the wires! 👾 Could not fetch assessment data.');
     } finally {
       setLoading(false);
@@ -126,9 +127,10 @@ export default function AssessmentPage() {
           colors: ['#0ea5e9', '#6366f1', '#a855f7']
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to submit attempt:', err);
-      toast.error(err.message || 'Submission blocked by the firewall of doom! 🛡️ Try again.', { id: toastId });
+      const message = err instanceof Error ? err.message : 'Submission blocked by the firewall of doom! 🛡️ Try again.';
+      toast.error(message, { id: toastId });
     } finally {
       setSubmitting(false);
     }

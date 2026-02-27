@@ -93,9 +93,9 @@ export default function Analytics() {
           active: activeTrend
         });
       }
-    } catch (err) {
-      toast.error('Analytics machine broke. 📉 Failed to load.');
+    } catch (err: unknown) {
       console.error('Failed to load admin stats:', err);
+      toast.error('Analytics machine broke. 📉 Failed to load.');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,8 @@ export default function Analytics() {
       document.body.removeChild(link);
       
       toast.success('Hot off the press! 📰 Report downloaded.', { id: toastId });
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Printer jam! 🖨️ Export failed.', { id: toastId });
     } finally {
       setExporting(false);
@@ -335,7 +336,7 @@ export default function Analytics() {
                   </div>
                 ) : (
                   <div className="divide-y divide-sbk-slate-100">
-                    {data.risk.inactive.map((t: any) => (
+                    {data.risk.inactive.map((t: InactiveTutor) => (
                       <div key={t.id} className="p-4 flex justify-between items-center hover:bg-sbk-slate-50 transition-colors">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-sbk-slate-900">{t.full_name}</p>

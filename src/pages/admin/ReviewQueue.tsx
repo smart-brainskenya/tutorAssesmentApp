@@ -50,7 +50,8 @@ export default function ReviewQueue() {
       setLoading(true);
       const data = await api.getReviewQueue();
       setQueue(data);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('The queue is shy today. 🙈 Failed to load.');
     } finally {
       setLoading(false);
@@ -67,7 +68,8 @@ export default function ReviewQueue() {
         initialScores[s.id] = 0;
       });
       setScores(initialScores);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Attempt details went missing! 🕵️‍♂️');
     }
   };
@@ -98,7 +100,8 @@ export default function ReviewQueue() {
       toast.success('Review done! Justice served. 👩‍⚖️', { id: toastId });
       setSelectedAttempt(null);
       fetchQueue();
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err);
       toast.error('Gavel broken! 🔨 Failed to submit review.', { id: toastId });
     } finally {
       setReviewLoading(false);
@@ -213,7 +216,7 @@ export default function ReviewQueue() {
                   <BookOpen className="w-4 h-4" /> Section B: Manual Evaluation
                 </h3>
                 
-                {selectedAttempt.submissions.map((sub: any, idx: number) => (
+                {selectedAttempt.submissions.map((sub: { id: string; questions: { question_text: string; points: number }; answer_text: string }, idx: number) => (
                   <div key={sub.id} className="border border-sbk-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
                     <div className="bg-sbk-slate-50 px-6 py-4 border-b border-sbk-slate-200">
                       <p className="text-sm font-bold text-sbk-slate-700">Question {idx + 1}</p>
