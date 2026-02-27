@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User as Profile } from '../types';
@@ -20,6 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<AuthStatus>('INITIALIZING');
+  const statusRef = useRef(status);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -37,8 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(data);
         setStatus('AUTHENTICATED');
-        // Update last login timestamp silently
-        await supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', userId);
+
+        // Update last login timestamp silently if it's more than 24h old or not set
+        const lastLogin = data.last_login ? new Date(data.last_login).getTime() : 0;
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+
+        if (now - lastLogin > twentyFourHours) {
+          await supabase.from('users')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', userId);
+        }
       }
     } catch (err) {
       console.error('[AuthContext] Unexpected fetch error:', err);
@@ -51,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Safety timeout: If auth takes longer than 5s, force unauthenticated to unblock UI
     const safetyTimeout = setTimeout(() => {
-      if (mounted && status === 'INITIALIZING') {
+      if (mounted && statusRef.current === 'INITIALIZING') {
         console.warn('[AuthContext] Auth initialization timed out. Forcing state to UNAUTHENTICATED.');
         setStatus('UNAUTHENTICATED');
       }
@@ -115,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

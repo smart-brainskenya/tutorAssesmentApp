@@ -44,13 +44,13 @@ export function Modal({
     >
       <div className="w-full max-w-md mx-4 bg-white rounded-lg shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-sbk-slate-200">
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-sbk-slate-900">{title}</h2>
           </div>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-sbk-slate-400 hover:text-sbk-slate-600 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -60,7 +60,7 @@ export function Modal({
         {/* Body */}
         <div className="p-6">
           {description && typeof description === 'string' ? (
-            <p className="text-sm text-slate-600">{description}</p>
+            <p className="text-sm text-sbk-slate-600">{description}</p>
           ) : (
             description
           )}
@@ -68,7 +68,7 @@ export function Modal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-sbk-slate-200 bg-sbk-slate-50">
           <Button
             variant="outline"
             onClick={onCancel}

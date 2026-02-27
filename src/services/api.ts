@@ -1,48 +1,47 @@
 import { supabase } from '../lib/supabase';
 import { Category, Question, User, Section } from '../types';
 import { calculateOMI } from '../utils/omi';
+import { transformCategoryData, RawCategoryData } from '../utils/assessment-transforms';
+
+interface RawSection extends Section {
+  questions: { count: number }[];
+}
 
 export const api = {
   // Categories
   getCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*, sections(questions(count))')
+      .select('*, sections(questions(count), section_type)')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    return (data as any[]).map(cat => {
-      const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
-        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
-      return {
-        ...cat,
-        section_count: totalSections,
-        question_count: totalQuestions
-      };
-    }) as (Category & { section_count: number; question_count: number })[];
+    return transformCategoryData(data as RawCategoryData[]) as (Category & {
+      section_count: number;
+      question_count: number;
+      section_a_count: number;
+      section_b_count: number;
+      estimated_time: number;
+    })[];
   },
 
   getPublishedCategories: async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*, sections(questions(count))')
+      .select('*, sections(questions(count), section_type)')
       .eq('is_published', true)
       .order('published_at', { ascending: false });
     
     if (error) throw error;
     
-    return (data as any[]).map(cat => {
-      const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
-        acc + (sec.questions?.[0]?.count || 0), 0) || 0;
-      return {
-        ...cat,
-        section_count: totalSections,
-        question_count: totalQuestions
-      };
-    }) as (Category & { section_count: number; question_count: number })[];
+    return transformCategoryData(data as RawCategoryData[]) as (Category & {
+      section_count: number;
+      question_count: number;
+      section_a_count: number;
+      section_b_count: number;
+      estimated_time: number;
+    })[];
   },
 
   createCategory: async (name: string, description: string, is_published: boolean = false) => {
@@ -101,7 +100,7 @@ export const api = {
       .order('order_index', { ascending: true });
     
     if (error) throw error;
-    return (data as any[]).map(sec => ({
+    return (data as RawSection[]).map((sec) => ({
       ...sec,
       question_count: sec.questions?.[0]?.count || 0
     })) as (Section & { question_count: number })[];
@@ -185,7 +184,7 @@ export const api = {
   // Attempts
   submitHybridAssessment: async (params: {
     categoryId: string,
-    sectionA: { rawScore: number, maxScore: number, snapshot: any },
+    sectionA: { rawScore: number, maxScore: number, snapshot: Record<string, string> },
     sectionB: { questionId: string, answerText: string }[]
   }) => {
     // Calls the atomic RPC to ensure attempt and sections are created together
@@ -209,16 +208,28 @@ export const api = {
 
 
 
-  getTutorAttempts: async (userId: string) => {
-    const { data, error } = await supabase
+  getTutorAttempts: async (userId: string, filterStatus: 'graded' | 'all' = 'graded') => {
+    let query = supabase
       .from('attempts')
       .select(`
         *,
-        categories (name)
+        categories (name),
+        section_a_scores (raw_score, max_score),
+        section_b_submissions (
+          id,
+          question_id,
+          answer_text,
+          questions (question_text, points),
+          reviews (score, feedback)
+        )
       `)
-      .eq('user_id', userId)
-      .eq('status', 'graded') // Only show finalized results to tutors
-      .order('completed_at', { ascending: false });
+      .eq('user_id', userId);
+
+    if (filterStatus === 'graded') {
+      query = query.eq('status', 'graded');
+    }
+
+    const { data, error } = await query.order('completed_at', { ascending: false });
 
     if (error) throw error;
     return data;
@@ -241,10 +252,10 @@ export const api = {
 
     if (userError) throw userError;
 
-    return users.map((u: any) => {
+    return users.map((u: { attempts: { percentage: number }[] } & User) => {
       const attempts = u.attempts || [];
       const avg = attempts.length > 0 
-        ? attempts.reduce((acc: number, curr: any) => acc + curr.percentage, 0) / attempts.length 
+        ? attempts.reduce((acc: number, curr: { percentage: number }) => acc + curr.percentage, 0) / attempts.length
         : null;
       
       return {
@@ -361,7 +372,7 @@ export const api = {
       const tAttempts = attempts.filter(a => a.user_id === t.id);
       
       // Get latest attempt per category for OMI
-      const latestByCategory: Record<string, any> = {};
+      const latestByCategory: Record<string, typeof tAttempts[0]> = {};
       tAttempts.forEach(a => {
         if (!latestByCategory[a.category_id] || new Date(a.completed_at) > new Date(latestByCategory[a.category_id].completed_at)) {
           latestByCategory[a.category_id] = a;

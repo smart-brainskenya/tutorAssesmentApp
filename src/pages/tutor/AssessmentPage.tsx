@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Alert } from '../../components/common/Alert';
-import { ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trophy, CheckCircle2, Clock, CheckCircle, BarChart3, Home } from 'lucide-react';
 import { api } from '../../services/api';
 import { Question, Section } from '../../types';
 import confetti from 'canvas-confetti';
@@ -126,7 +126,7 @@ export default function AssessmentPage() {
           colors: ['#0ea5e9', '#6366f1', '#a855f7']
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to submit attempt:', err);
       toast.error(err.message || 'Submission blocked by the firewall of doom! 🛡️ Try again.', { id: toastId });
     } finally {
@@ -142,7 +142,7 @@ export default function AssessmentPage() {
   );
 
   if (error) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-sbk-slate-50 flex items-center justify-center px-6 py-12">
       <div className="max-w-md w-full">
         <Alert
           variant="error"
@@ -160,49 +160,121 @@ export default function AssessmentPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50 flex items-center justify-center px-6 py-12">
-        <div className="max-w-2xl w-full animate-in fade-in zoom-in duration-500">
-          <div className="flex justify-center mb-10">
-            <div className="inline-flex items-center justify-center p-8 rounded-2xl bg-amber-100">
-              <Trophy className="w-20 h-20 text-amber-600" />
+      <div className="min-h-screen bg-gradient-to-br from-sbk-slate-50 via-white to-sbk-slate-50/50 flex items-center justify-center px-6 py-12">
+        <div className="max-w-3xl w-full animate-in fade-in zoom-in duration-500">
+          {/* Success Icon */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex items-center justify-center p-6 rounded-full bg-sbk-green-100 ring-8 ring-green-50">
+              <CheckCircle2 className="w-16 h-16 text-sbk-green-600" />
             </div>
           </div>
           
           <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">Assessment Submitted!</h1>
-            <p className="text-lg text-slate-600">Your performance is being recorded.</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-sbk-slate-900 mb-3">Assessment Submitted!</h1>
+            <p className="text-lg text-sbk-slate-600">Your responses have been securely recorded.</p>
+          </div>
+
+          {/* Lifecycle Indicator */}
+          <div className="mb-12">
+            <div className="relative flex justify-between w-full max-w-lg mx-auto">
+              {/* Progress Line */}
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-sbk-slate-200 -translate-y-1/2 -z-10 rounded-full"></div>
+              <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-sbk-green-500 -translate-y-1/2 -z-10 rounded-full"></div>
+
+              {/* Step 1: Submitted */}
+              <div className="flex flex-col items-center gap-2 bg-white px-2">
+                <div className="w-10 h-10 rounded-full bg-sbk-green-500 flex items-center justify-center shadow-md ring-4 ring-white">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs font-bold text-sbk-green-700 uppercase tracking-wide">Submitted</span>
+              </div>
+
+              {/* Step 2: In Review */}
+              <div className="flex flex-col items-center gap-2 bg-white px-2">
+                <div className="w-10 h-10 rounded-full bg-sbk-amber-500 flex items-center justify-center shadow-md ring-4 ring-white animate-pulse">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs font-bold text-sbk-amber-600 uppercase tracking-wide">In Review</span>
+              </div>
+
+              {/* Step 3: Graded */}
+              <div className="flex flex-col items-center gap-2 bg-white px-2">
+                <div className="w-10 h-10 rounded-full bg-sbk-slate-200 flex items-center justify-center ring-4 ring-white">
+                  <Trophy className="w-5 h-5 text-sbk-slate-400" />
+                </div>
+                <span className="text-xs font-bold text-sbk-slate-400 uppercase tracking-wide">Graded</span>
+              </div>
+            </div>
           </div>
           
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden mb-10">
-            <div className="p-10 md:p-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Section A Score</p>
-                  <p className="text-5xl md:text-6xl font-bold text-slate-900 mb-2">{score}</p>
-                  <p className="text-xl font-bold text-sbk-blue">
-                    Knowledge Check Complete
+          <div className="bg-white rounded-2xl border border-sbk-slate-200 shadow-xl shadow-sbk-slate-200/50 overflow-hidden mb-8">
+            <div className="p-8 md:p-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 divide-y md:divide-y-0 md:divide-x divide-sbk-slate-100">
+
+                {/* Section A Score */}
+                <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left pb-8 md:pb-0">
+                  <span className="inline-block px-3 py-1 bg-sbk-blue/10 text-sbk-depth text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
+                    Multiple Choice Results
+                  </span>
+                  <div className="mb-2">
+                    <span className="text-5xl font-black text-sbk-slate-900 tracking-tight">{score}</span>
+                    <span className="text-xl font-bold text-sbk-slate-400 ml-2">pts</span>
+                  </div>
+                  <p className="text-sm font-medium text-sbk-slate-500 leading-relaxed">
+                    Your Section A answers have been auto-graded. This score contributes to your final assessment grade.
                   </p>
                 </div>
 
-                <div className="flex flex-col justify-center p-6 rounded-xl bg-slate-50 border border-slate-200">
-                  <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Status</p>
-                  <p className="text-2xl font-bold text-sbk-orange mb-2">Awaiting Review</p>
-                  <p className="text-sm text-slate-600">
-                    Your Section B responses are pending manual review by an SBK Admin.
+                {/* Section B Status */}
+                <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left pt-8 md:pt-0 md:pl-12">
+                   <span className="inline-block px-3 py-1 bg-sbk-amber-50 text-sbk-amber-700 text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
+                    Short Answer Status
+                  </span>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-sbk-amber-500 animate-pulse"></div>
+                    <span className="text-2xl font-bold text-sbk-slate-900">Pending Review</span>
+                  </div>
+                  <p className="text-sm font-medium text-sbk-slate-500 leading-relaxed mb-4">
+                    Your written responses have been queued for manual grading by an instructor.
                   </p>
+                  <div className="bg-sbk-slate-50 rounded-lg p-3 w-full border border-sbk-slate-100">
+                     <p className="text-xs text-sbk-slate-600 font-medium flex items-center justify-center md:justify-start gap-2">
+                       <Clock className="w-3.5 h-3.5 text-sbk-slate-400" />
+                       Expected timeframe: <span className="text-sbk-slate-900 font-bold">24-48 hours</span>
+                     </p>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Footer Status Bar */}
+            <div className="bg-sbk-slate-50 px-8 py-4 border-t border-sbk-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+              <p className="text-sm font-bold text-sbk-slate-600">
+                Overall Status: <span className="text-sbk-amber-600">Awaiting Review</span>
+              </p>
+              <p className="text-xs font-medium text-sbk-slate-400">
+                Reference ID: #{id?.substring(0, 8)}
+              </p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => navigate('/results')}
+              className="px-8 bg-sbk-slate-900 hover:bg-sbk-slate-800 text-white shadow-lg shadow-sbk-slate-900/20"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              View Performance History
+            </Button>
             <Button 
               size="lg" 
               onClick={() => navigate('/dashboard')} 
               variant="outline"
-              className="px-8"
+              className="px-8 border-sbk-slate-200 hover:bg-sbk-slate-50 text-sbk-slate-700"
             >
-              Back to Dashboard
+              <Home className="w-4 h-4 mr-2" />
+              Return to Dashboard
             </Button>
           </div>
         </div>
@@ -226,9 +298,9 @@ export default function AssessmentPage() {
     : false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-sbk-slate-50 via-white to-sbk-slate-50/50">
       {/* Top Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-slate-100 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-sbk-slate-100 z-50">
         <div 
           className="h-full bg-gradient-to-r from-sbk-blue to-sbk-teal transition-all duration-500"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -245,10 +317,10 @@ export default function AssessmentPage() {
                 </span>
              </div>
           )}
-          <div className="inline-flex items-center justify-center px-4 py-1.5 bg-slate-100 rounded-full mb-4">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Question {currentIndex + 1} of {questions.length}</span>
+          <div className="inline-flex items-center justify-center px-4 py-1.5 bg-sbk-slate-100 rounded-full mb-4">
+            <span className="text-xs font-bold text-sbk-slate-600 uppercase tracking-wider">Question {currentIndex + 1} of {questions.length}</span>
           </div>
-          <div className="w-48 h-1 bg-slate-100 rounded-full overflow-hidden mx-auto">
+          <div className="w-48 h-1 bg-sbk-slate-100 rounded-full overflow-hidden mx-auto">
             <div
               className="h-full bg-gradient-to-r from-sbk-primary to-sbk-depth transition-all duration-500"
               style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -257,16 +329,16 @@ export default function AssessmentPage() {
         </div>
 
         {/* Question Container */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 md:p-10 mb-10 focus-visible:ring-2 focus-visible:ring-primary-500">
+        <div className="bg-white rounded-2xl border border-sbk-slate-200 shadow-sm p-8 md:p-10 mb-10 focus-visible:ring-2 focus-visible:ring-sbk-blue">
           {/* Question Type Badge */}
           <div className="mb-8">
-            <span className="inline-block text-xs font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg">
+            <span className="inline-block text-xs font-bold text-sbk-slate-600 uppercase tracking-widest bg-sbk-slate-100 px-3 py-1.5 rounded-lg">
               {currentQuestion.question_type === 'multiple_choice' ? 'Multiple Choice' : 'Short Answer'}
             </span>
           </div>
 
           {/* Question Text */}
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-10 leading-relaxed">
+          <h2 className="text-xl md:text-2xl font-bold text-sbk-slate-900 mb-10 leading-relaxed">
             {currentQuestion.question_text}
           </h2>
 
@@ -277,27 +349,27 @@ export default function AssessmentPage() {
               {options.map((option) => (
                 <button
                   key={option.label}
-                  onClick={() => handleOptionSelect(option.label as any)}
+                  onClick={() => handleOptionSelect(option.label as 'A' | 'B' | 'C' | 'D')}
                   disabled={submitting || submitted}
                   className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left flex items-start gap-4 group ${
                     mcAnswers[currentQuestion.id] === option.label
                       ? 'border-sbk-primary bg-sbk-primary/10 shadow-md'
-                      : 'border-slate-200 hover:border-sbk-primary/30 hover:bg-slate-50 hover:shadow-sm'
+                      : 'border-sbk-slate-200 hover:border-sbk-primary/30 hover:bg-sbk-slate-50 hover:shadow-sm'
                   } ${(submitting || submitted) ? 'cursor-not-allowed opacity-75' : 'cursor-pointer active:scale-[0.99]'}`}
                 >
                   {/* Option Letter Button */}
                   <div className={`flex-shrink-0 w-10 h-10 rounded-lg border-2 flex items-center justify-center font-bold text-sm transition-all duration-200 ${
                     mcAnswers[currentQuestion.id] === option.label
                       ? 'bg-sbk-primary border-sbk-primary text-white'
-                      : 'bg-white border-slate-300 text-slate-600 group-hover:border-sbk-primary/40'
+                      : 'bg-white border-sbk-slate-300 text-sbk-slate-600 group-hover:border-sbk-primary/40'
                   }`}>
                     {option.label}
                   </div>
                   {/* Option Text */}
                   <span className={`flex-1 text-lg font-semibold pt-0.5 ${
                     mcAnswers[currentQuestion.id] === option.label
-                      ? 'text-slate-900'
-                      : 'text-slate-700'
+                      ? 'text-sbk-slate-900'
+                      : 'text-sbk-slate-700'
                   }`}>
                     {option.text}
                   </span>
@@ -308,11 +380,11 @@ export default function AssessmentPage() {
             // Short Answer Input
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                <label className="block text-sm font-semibold text-sbk-slate-700 mb-3">
                   Your Answer
                 </label>
                 <textarea
-                    className="w-full h-48 p-5 rounded-xl border-2 border-slate-200 focus:border-sbk-primary focus:ring-4 focus:ring-sbk-primary/10 focus:outline-none transition-all duration-200 resize-none text-lg leading-relaxed text-slate-700 placeholder-slate-400 font-medium"
+                    className="w-full h-48 p-5 rounded-xl border-2 border-sbk-slate-200 focus:border-sbk-primary focus:ring-4 focus:ring-sbk-primary/10 focus:outline-none transition-all duration-200 resize-none text-lg leading-relaxed text-sbk-slate-700 placeholder-slate-400 font-medium"
                   placeholder="Type your detailed response here. Be thorough and clear in your answer..."
                   value={textAnswers[currentQuestion.id] || ''}
                   onChange={(e) => handleTextChange(e.target.value)}
@@ -321,22 +393,22 @@ export default function AssessmentPage() {
               </div>
               
               {/* Word Count and Requirements */}
-              <div className="flex justify-between items-center bg-slate-50 rounded-lg p-4 border border-slate-100">
+              <div className="flex justify-between items-center bg-sbk-slate-50 rounded-lg p-4 border border-sbk-slate-100">
                 <div className="flex items-center gap-4 text-sm">
                   <div>
-                    <span className="text-slate-600 font-medium">Minimum Words: </span>
-                    <span className="font-bold text-slate-900">{currentQuestion.min_word_count || 0}</span>
+                    <span className="text-sbk-slate-600 font-medium">Minimum Words: </span>
+                    <span className="font-bold text-sbk-slate-900">{currentQuestion.min_word_count || 0}</span>
                   </div>
-                  <div className="hidden md:block h-4 border-l border-slate-200"></div>
+                  <div className="hidden md:block h-4 border-l border-sbk-slate-200"></div>
                   <div className="md:block">
-                    <span className="text-slate-600 font-medium">Your Words: </span>
-                    <span className={`font-bold ${(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-green-600' : 'text-amber-600'}`}>
+                    <span className="text-sbk-slate-600 font-medium">Your Words: </span>
+                    <span className={`font-bold ${(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) ? 'text-sbk-green-600' : 'text-sbk-amber-600'}`}>
                       {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length) || 0}
                     </span>
                   </div>
                 </div>
                 {(textAnswers[currentQuestion.id]?.trim().split(/\s+/).filter(w => w).length || 0) >= (currentQuestion.min_word_count || 0) && (
-                  <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">✓ Met</span>
+                  <span className="text-xs font-bold text-sbk-green-600 bg-sbk-green-50 px-3 py-1 rounded-full">✓ Met</span>
                 )}
               </div>
             </div>
@@ -351,7 +423,7 @@ export default function AssessmentPage() {
             size="lg"
             disabled={currentIndex === 0 || submitting || submitted}
             onClick={() => setCurrentIndex(currentIndex - 1)}
-            className="px-6 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            className="px-6 text-sbk-slate-600 hover:text-sbk-slate-900 hover:bg-sbk-slate-100"
           >
             <ChevronLeft className="w-5 h-5 mr-2" /> Previous
           </Button>

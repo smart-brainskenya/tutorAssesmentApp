@@ -1,10 +1,5 @@
 import { ReactNode } from 'react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: any[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../../lib/utils';
 
 interface CardProps {
   children: ReactNode;
@@ -22,12 +17,12 @@ export function Card({
   variant = 'default',
 }: CardProps) {
   const variantStyles = {
-    default: 'bg-white border border-slate-200 shadow-sm',
-    elevated: 'bg-white border border-slate-200 shadow-md',
-    flat: 'bg-slate-50 border border-slate-100',
+    default: 'bg-white border border-sbk-slate-200 shadow-sm',
+    elevated: 'bg-white border border-sbk-slate-200 shadow-md',
+    flat: 'bg-sbk-slate-50 border border-sbk-slate-100',
   };
 
-  const hoverStyles = hover ? 'hover:border-slate-300 hover:shadow-md transition-all' : '';
+  const hoverStyles = hover ? 'hover:border-sbk-slate-300 hover:shadow-md transition-all' : '';
   const clickableStyles = clickable ? 'cursor-pointer' : '';
 
   return (
