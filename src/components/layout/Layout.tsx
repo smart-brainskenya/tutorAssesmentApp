@@ -14,6 +14,8 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
 
   const handleLogout = async () => {
     await signOut();
+    // No manual navigation needed; AuthContext state change will trigger
+    // ProtectedRoute to redirect to /login automatically
   };
 
   return (

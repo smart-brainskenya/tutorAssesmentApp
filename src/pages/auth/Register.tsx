@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -48,12 +49,13 @@ export default function Register() {
       if (signUpError) throw signUpError;
       
       if (data.user) {
-        toast.success('Registration request successful! Please sign in.');
         setLoading(false);
+        toast.success('Welcome to the club! 🚀 Please sign in.');
         navigate('/login');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to register');
+      setError(err.message || 'Failed to register');
+      toast.error(err.message || 'Computer says no. 🤖 Failed to register');
     } finally {
       setLoading(false);
     }

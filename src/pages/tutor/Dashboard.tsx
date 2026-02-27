@@ -51,7 +51,7 @@ export default function Dashboard() {
         setCategories(cats as DashboardCategory[]);
         setAttempts(myAttempts as Attempt[]);
       } catch (error) {
-        toast.error('Failed to load dashboard data');
+        toast.error('Dashboard is taking a nap. 😴 Failed to load.');
         console.error('Failed to load dashboard:', error);
       } finally {
         setLoading(false);
@@ -76,7 +76,7 @@ export default function Dashboard() {
       
       if (minutesSinceLast < 15) {
         const remaining = Math.ceil(15 - minutesSinceLast);
-        toast.error(`Retake locked. Please wait ${remaining} minutes.`);
+        toast.error(`Hold your horses! 🐎 Retake locked for ${remaining} minutes.`);
         return;
       }
     }
@@ -242,8 +242,9 @@ export default function Dashboard() {
       />
 
       {loading ? (
-        <div className="py-20 flex justify-center">
+        <div className="py-20 flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-primary"></div>
+          <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
         </div>
       ) : (
         <>

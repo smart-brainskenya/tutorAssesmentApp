@@ -31,9 +31,9 @@ export default function Tutors() {
     try {
       setLoading(true);
       const data = await api.getAllTutors();
-      setTutors(data as Tutor[]);
-    } catch {
-      toast.error('Failed to load tutors');
+      setTutors(data);
+    } catch (err) {
+      toast.error('Where did everyone go? 🤷 Failed to load tutors.');
     } finally {
       setLoading(false);
     }
@@ -42,10 +42,10 @@ export default function Tutors() {
   const handleToggleActive = async (user: Tutor) => {
     try {
       const updated = await api.updateUserAccount(user.id, { is_active: !user.is_active });
-      toast.success(`User ${updated.is_active ? 'activated' : 'deactivated'}`);
+      toast.success(`${updated.is_active ? 'User awakened! ☀️' : 'User put to sleep. 🌙'}`);
       fetchTutors();
-    } catch {
-      toast.error('Operation failed');
+    } catch (err) {
+      toast.error('Computer says no. 🤖 Operation failed.');
     }
   };
 
@@ -55,28 +55,28 @@ export default function Tutors() {
     
     try {
       await api.updateUserAccount(user.id, { role: newRole });
-      toast.success(`Role updated to ${newRole}`);
+      toast.success(`Level up! 🍄 Role updated to ${newRole}`);
       fetchTutors();
-    } catch {
-      toast.error('Failed to update role');
+    } catch (err) {
+      toast.error('Promotion denied. 🛑 Failed to update role.');
     }
   };
 
   const handleResetPassword = async (email: string) => {
     try {
       await api.triggerPasswordReset(email);
-      toast.success('Password reset email sent');
-    } catch {
-      toast.error('Failed to send reset link');
+      toast.success('Carrier pigeon dispatched! 🐦 Password reset sent.');
+    } catch (err) {
+      toast.error('Pigeon got lost. 🦅 Failed to send reset link.');
     }
   };
 
   const handleManualUnlock = async (userId: string) => {
     try {
       await api.unlockTutorRetake(userId);
-      toast.success('Retake lock cleared');
-    } catch {
-      toast.error('Failed to unlock');
+      toast.success('Unshackled! ⛓️‍💥 Retake lock cleared.');
+    } catch (err) {
+      toast.error('Keys missing! 🔑 Failed to unlock.');
     }
   };
 
@@ -86,8 +86,9 @@ export default function Tutors() {
   );
 
   if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-blue"></div>
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
     </div>
   );
 

@@ -49,9 +49,9 @@ export default function ReviewQueue() {
     try {
       setLoading(true);
       const data = await api.getReviewQueue();
-      setQueue(data as QueueItem[]);
-    } catch {
-      toast.error('Failed to load review queue');
+      setQueue(data);
+    } catch (err) {
+      toast.error('The queue is shy today. 🙈 Failed to load.');
     } finally {
       setLoading(false);
     }
@@ -67,8 +67,8 @@ export default function ReviewQueue() {
         initialScores[s.id] = 0;
       });
       setScores(initialScores);
-    } catch {
-      toast.error('Failed to load attempt details');
+    } catch (err) {
+      toast.error('Attempt details went missing! 🕵️‍♂️');
     }
   };
 
@@ -84,7 +84,7 @@ export default function ReviewQueue() {
     if (!selectedAttempt) return;
     
     setReviewLoading(true);
-    const toastId = toast.loading('Finalizing review...');
+    const toastId = toast.loading('One Momment✍️');
 
     try {
       const reviewPayload = selectedAttempt.submissions.map((s) => ({
@@ -95,19 +95,20 @@ export default function ReviewQueue() {
 
       await api.submitReview(selectedAttempt.attempt.id, reviewPayload);
       
-      toast.success('Review finalized and tutor graded!', { id: toastId });
+      toast.success('Review done! Justice served. 👩‍⚖️', { id: toastId });
       setSelectedAttempt(null);
       fetchQueue();
-    } catch {
-      toast.error('Failed to submit review', { id: toastId });
+    } catch (err) {
+      toast.error('Gavel broken! 🔨 Failed to submit review.', { id: toastId });
     } finally {
       setReviewLoading(false);
     }
   };
 
   if (loading) return (
-    <div className="flex justify-center py-12">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sbk-blue"></div>
+    <div className="flex flex-col items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
     </div>
   );
 
