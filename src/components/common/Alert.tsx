@@ -20,28 +20,28 @@ export function Alert({
 }: AlertProps) {
   const variantStyles = {
     success: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      text: 'text-green-900',
-      icon: 'text-green-600',
+      bg: 'bg-sbk-green-50',
+      border: 'border-sbk-green-200',
+      text: 'text-sbk-green-900',
+      icon: 'text-sbk-green-600',
     },
     error: {
-      bg: 'bg-red-50',
-      border: 'border-red-200',
-      text: 'text-red-900',
-      icon: 'text-red-600',
+      bg: 'bg-sbk-red-50',
+      border: 'border-sbk-red-200',
+      text: 'text-sbk-red-900',
+      icon: 'text-sbk-red-600',
     },
     warning: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      text: 'text-amber-900',
-      icon: 'text-amber-600',
+      bg: 'bg-sbk-amber-50',
+      border: 'border-sbk-amber-200',
+      text: 'text-sbk-amber-900',
+      icon: 'text-sbk-amber-600',
     },
     info: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-900',
-      icon: 'text-blue-600',
+      bg: 'bg-sbk-blue/10',
+      border: 'border-sbk-blue/30',
+      text: 'text-sbk-depth',
+      icon: 'text-sbk-blue',
     },
   };
 

@@ -102,7 +102,7 @@ export default function AdminCategoryDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-      <button onClick={() => navigate('/admin/manage')} className="flex items-center text-sm font-semibold text-slate-600 hover:text-sbk-primary transition-colors">
+      <button onClick={() => navigate('/admin/manage')} className="flex items-center text-sm font-semibold text-sbk-slate-600 hover:text-sbk-primary transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Categories
       </button>
 
@@ -111,13 +111,13 @@ export default function AdminCategoryDetail() {
         subtitle={category?.description}
       />
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-8 bg-slate-50 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">Define Assessment Section</h2>
+      <div className="bg-white rounded-lg border border-sbk-slate-200 shadow-sm overflow-hidden">
+        <div className="p-8 bg-sbk-slate-50 border-b border-sbk-slate-100">
+          <h2 className="text-lg font-semibold text-sbk-slate-900 mb-6">Define Assessment Section</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div className="md:col-span-1">
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-widest mb-2">Type</label>
-              <select className="w-full h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-sbk-primary outline-none transition-all" value={type} onChange={e => setType(e.target.value as 'A' | 'B')}>
+              <label className="block text-xs font-semibold text-sbk-slate-700 uppercase tracking-widest mb-2">Type</label>
+              <select className="w-full h-10 rounded-lg border border-sbk-slate-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-sbk-primary outline-none transition-all" value={type} onChange={e => setType(e.target.value as 'A' | 'B')}>
                 <option value="A">Section A (MCQ / Auto)</option>
                 <option value="B">Section B (Text / Manual)</option>
               </select>
@@ -137,22 +137,22 @@ export default function AdminCategoryDetail() {
         <div className="p-8">
           <div className="space-y-4">
             {sections.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">No sections defined. Create Section A and B to begin.</div>
+              <div className="p-12 text-center text-sbk-slate-500">No sections defined. Create Section A and B to begin.</div>
             ) : (
               sections.map((sec) => (
-                <div key={sec.id} className="p-6 border border-slate-200 rounded-lg flex justify-between items-center bg-white hover:border-slate-300 transition-colors group">
+                <div key={sec.id} className="p-6 border border-sbk-slate-200 rounded-lg flex justify-between items-center bg-white hover:border-sbk-slate-300 transition-colors group">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg flex-shrink-0 ${sec.section_type === 'A' ? 'bg-sbk-primary/10 text-sbk-primary' : 'bg-purple-100 text-purple-600'}`}>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg flex-shrink-0 ${sec.section_type === 'A' ? 'bg-sbk-primary/10 text-sbk-primary' : 'bg-sbk-teal/20 text-sbk-teal'}`}>
                       {sec.section_type}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-slate-900">{sec.title}</h3>
-                      <p className="text-sm text-slate-500">{sec.section_type === 'A' ? 'Auto-graded Multiple Choice' : 'Manual Review Text Responses'}</p>
-                      <p className="text-xs text-slate-400 font-medium mt-1">{sec.question_count} Questions</p>
+                      <h3 className="font-semibold text-sbk-slate-900">{sec.title}</h3>
+                      <p className="text-sm text-sbk-slate-500">{sec.section_type === 'A' ? 'Auto-graded Multiple Choice' : 'Manual Review Text Responses'}</p>
+                      <p className="text-xs text-sbk-slate-400 font-medium mt-1">{sec.question_count} Questions</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-                    <button onClick={() => handleDeleteSection(sec)} className="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete section">
+                    <button onClick={() => handleDeleteSection(sec)} className="p-2 text-sbk-slate-300 hover:text-sbk-red-500 transition-colors" title="Delete section">
                       <Trash2 className="w-5 h-5" />
                     </button>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/admin/section/${sec.id}`)} className="gap-2">

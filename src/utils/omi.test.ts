@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import { calculateOMI } from './omi';
 
@@ -90,7 +91,7 @@ describe('calculateOMI', () => {
       { categories: { name: 'Platform Operations Test' }, percentage: 100 },
       { categories: {}, percentage: 0 },
       { categories: null, percentage: 0 }
-    ];
+    ] as any[];
     expect(calculateOMI(attempts)).toBe(100);
   });
 });
