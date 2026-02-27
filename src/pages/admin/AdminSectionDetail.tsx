@@ -33,24 +33,24 @@ export default function AdminSectionDetail() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [secData, qData] = await Promise.all([
+          api.getSectionById(id!),
+          api.getQuestionsBySection(id!)
+        ]);
+        setSection(secData);
+        setQuestions(qData);
+      } catch {
+        toast.error('Failed to load section data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id) fetchData();
   }, [id]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [secData, qData] = await Promise.all([
-        api.getSectionById(id!),
-        api.getQuestionsBySection(id!)
-      ]);
-      setSection(secData);
-      setQuestions(qData);
-    } catch (err) {
-      toast.error('Failed to load section data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEditClick = (q: Question) => {
     setEditingQuestion(q);
@@ -108,12 +108,12 @@ export default function AdminSectionDetail() {
         toast.success('Question added');
       }
       resetForm();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save question');
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to save question');
     }
   };
 
-  const handleDeleteQuestion = async (question: Question) => {
+  const handleDeleteQuestion = (question: Question) => {
     setQuestionToDelete(question);
     setDeleteModalOpen(true);
   };
@@ -127,8 +127,8 @@ export default function AdminSectionDetail() {
       toast.success('Question deleted successfully');
       setDeleteModalOpen(false);
       setQuestionToDelete(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete question');
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to delete question');
     } finally {
       setIsDeleting(false);
     }

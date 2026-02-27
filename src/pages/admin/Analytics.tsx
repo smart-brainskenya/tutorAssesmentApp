@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
-import { MetricCard } from '../../components/admin/MetricCard';
+import { CompactMetricCard } from '../../components/admin/CompactMetricCard';
 import { SectionHeader } from '../../components/common/SectionHeader';
+import { calculateScoreTrend, calculateActiveTutorsTrend } from '../../utils/analytics-helpers';
 import {
   Users, TrendingUp, AlertTriangle, Award,
   FileDown, Search
@@ -18,11 +19,55 @@ interface LeaderboardItem {
   omi: number | null;
 }
 
+interface RawAttempt {
+  user_id: string;
+  categories: { name: string } | null;
+  score: number;
+  percentage: number;
+  completed_at: string;
+}
+
+interface RiskTutor {
+  id: string;
+  full_name: string;
+  avgPercentage: number;
+}
+
+interface InactiveTutor {
+  id: string;
+  full_name: string;
+}
+
+interface AdminStats {
+  metrics: {
+    totalTutors: number;
+    activeTutorsCount: number;
+    avgGlobalScore: number;
+    avgGlobalOMI: number;
+    mostPassed: string;
+    mostFailed: string;
+    atRiskCount: number;
+  };
+  leaderboard: LeaderboardItem[];
+  rawAttempts: RawAttempt[];
+  risk: {
+    below60: RiskTutor[];
+    inactive: InactiveTutor[];
+  };
+}
+
+interface TrendData {
+  value: number;
+  direction: 'up' | 'down' | 'neutral';
+  percentageChange?: number;
+}
+
 export default function Analytics() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [trends, setTrends] = useState<{ score: TrendData | null; active: TrendData | null }>({ score: null, active: null });
 
   useEffect(() => {
     fetchData();
@@ -32,7 +77,22 @@ export default function Analytics() {
     try {
       setLoading(true);
       const res = await api.getAdminStats();
-      setData(res);
+      setData(res as AdminStats);
+
+      if (res.rawAttempts) {
+        // Since api.ts filters by status='graded', we can use rawAttempts directly
+        // However, calculateScoreTrend expects { completed_at: string, percentage: number }
+        // which RawAttempt satisfies.
+        const gradedAttempts = res.rawAttempts;
+
+        const scoreTrend = calculateScoreTrend(gradedAttempts, 30);
+        const activeTrend = calculateActiveTutorsTrend(gradedAttempts, 30);
+
+        setTrends({
+          score: scoreTrend,
+          active: activeTrend
+        });
+      }
     } catch (err) {
       toast.error('Failed to load administrative analytics');
       console.error('Failed to load admin stats:', err);
@@ -52,7 +112,7 @@ export default function Analytics() {
     
     try {
       const headers = ['Tutor', 'Email', 'Category', 'Score', 'Percentage', 'Date'];
-      const rows = data.rawAttempts.map((a: any) => [
+      const rows = data.rawAttempts.map((a) => [
         `"${a.user_id}"`, // Using ID as placeholder for name if not joined
         `"${a.user_id}"`,
         `"${a.categories?.name || 'Unknown'}"`,
@@ -61,7 +121,7 @@ export default function Analytics() {
         `"${new Date(a.completed_at).toLocaleDateString()}"`
       ]);
 
-      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map((e: any) => e.join(','))].join("\n");
+      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map((e) => e.join(','))].join("\n");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       
@@ -73,14 +133,14 @@ export default function Analytics() {
       document.body.removeChild(link);
       
       toast.success('Report downloaded!', { id: toastId });
-    } catch (err) {
+    } catch {
       toast.error('Export failed', { id: toastId });
     } finally {
       setExporting(false);
     }
   };
 
-  const filteredLeaderboard: LeaderboardItem[] = data?.leaderboard?.filter((t: any) => 
+  const filteredLeaderboard: LeaderboardItem[] = data?.leaderboard?.filter((t) =>
     t.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -89,6 +149,12 @@ export default function Analytics() {
     <div className="flex flex-col justify-center items-center py-20 gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-blue"></div>
       <p className="text-sbk-slate-500 font-medium">Aggregating global metrics...</p>
+    </div>
+  );
+
+  if (!data) return (
+    <div className="flex justify-center py-20">
+      <p className="text-slate-500">Failed to load analytics data.</p>
     </div>
   );
 
@@ -105,23 +171,37 @@ export default function Analytics() {
           }
         />
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <MetricCard
+        {/* Cleaner Metric Hierarchy */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <CompactMetricCard
             label="Total Tutors"
             value={data.metrics.totalTutors}
-            icon={<Users className="w-5 h-5" />}
-            subtext={`${data.metrics.activeTutorsCount} Active`}
+            icon={<Users className="w-4 h-4" />}
           />
-          <MetricCard
+          <CompactMetricCard
+            label="Active Tutors"
+            value={data.metrics.activeTutorsCount}
+            trend={trends.active ? {
+              value: trends.active.value,
+              label: 'vs last 30d',
+              direction: trends.active.direction
+            } : undefined}
+            icon={<Users className="w-4 h-4" />}
+          />
+          <CompactMetricCard
             label="Global Avg"
             value={`${data.metrics.avgGlobalScore}%`}
-            icon={<TrendingUp className="w-5 h-5" />}
+            trend={trends.score ? {
+              value: `${trends.score.value}%`,
+              label: 'vs last 30d',
+              direction: trends.score.direction
+            } : undefined}
+            icon={<TrendingUp className="w-4 h-4" />}
           />
-          <MetricCard
-            label="Operational Maturity Index"
+          <CompactMetricCard
+            label="Avg OMI"
             value={`${Math.round(data.metrics.avgGlobalOMI)}%`}
-            subtext="Average OMI"
+            icon={<Award className="w-4 h-4" />}
           />
           <div className="bg-white border border-sbk-slate-200 shadow-sm p-6 rounded-lg">
             <p className="text-xs uppercase tracking-wide text-sbk-slate-500 font-medium">Top Category</p>
@@ -133,12 +213,6 @@ export default function Analytics() {
             <p className="text-3xl font-bold text-sbk-slate-900 mt-2">{data.metrics.mostFailed}</p>
             <p className="text-sm text-sbk-red-600 mt-2">✗ Most failed</p>
           </div>
-          <MetricCard
-            label="At Risk"
-            value={data.metrics.atRiskCount}
-            variant={data.metrics.atRiskCount > 0 ? 'danger' : 'neutral'}
-            subtext={data.metrics.atRiskCount > 0 ? 'Below 60% performance' : 'No tutors flagged'}
-          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -235,7 +309,7 @@ export default function Analytics() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {data.risk.below60.map((t: any) => (
+                    {data?.risk.below60.map((t) => (
                       <div key={t.id} className="flex items-center justify-between px-3 py-3 bg-white rounded-lg shadow-sm">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-sbk-slate-900 truncate">{t.full_name}</p>
@@ -284,5 +358,3 @@ export default function Analytics() {
     </div>
   );
 }
-
-

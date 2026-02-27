@@ -7,8 +7,19 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface Tutor {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'tutor';
+  is_active: boolean;
+  total_attempts: number;
+  average_score: number | null;
+  last_login: string | null;
+}
+
 export default function Tutors() {
-  const [tutors, setTutors] = useState<any[]>([]);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -20,25 +31,25 @@ export default function Tutors() {
     try {
       setLoading(true);
       const data = await api.getAllTutors();
-      setTutors(data);
-    } catch (err) {
+      setTutors(data as Tutor[]);
+    } catch {
       toast.error('Failed to load tutors');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleActive = async (user: any) => {
+  const handleToggleActive = async (user: Tutor) => {
     try {
       const updated = await api.updateUserAccount(user.id, { is_active: !user.is_active });
       toast.success(`User ${updated.is_active ? 'activated' : 'deactivated'}`);
       fetchTutors();
-    } catch (err) {
+    } catch {
       toast.error('Operation failed');
     }
   };
 
-  const handleToggleRole = async (user: any) => {
+  const handleToggleRole = async (user: Tutor) => {
     const newRole = user.role === 'admin' ? 'tutor' : 'admin';
     if (!confirm(`Promote ${user.full_name} to ${newRole}?`)) return;
     
@@ -46,7 +57,7 @@ export default function Tutors() {
       await api.updateUserAccount(user.id, { role: newRole });
       toast.success(`Role updated to ${newRole}`);
       fetchTutors();
-    } catch (err) {
+    } catch {
       toast.error('Failed to update role');
     }
   };
@@ -55,7 +66,7 @@ export default function Tutors() {
     try {
       await api.triggerPasswordReset(email);
       toast.success('Password reset email sent');
-    } catch (err) {
+    } catch {
       toast.error('Failed to send reset link');
     }
   };
@@ -64,12 +75,12 @@ export default function Tutors() {
     try {
       await api.unlockTutorRetake(userId);
       toast.success('Retake lock cleared');
-    } catch (err) {
+    } catch {
       toast.error('Failed to unlock');
     }
   };
 
-  const filteredTutors = tutors.filter(t => 
+  const filteredTutors = tutors.filter((t) =>
     t.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   );

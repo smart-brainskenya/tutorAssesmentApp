@@ -58,9 +58,9 @@ export default function Login() {
       } else {
         navigate('/dashboard');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Unexpected login error:', err);
-      setError(err.message || 'An unexpected error occurred during login');
+      setError((err as Error).message || 'An unexpected error occurred during login');
       setLoading(false);
     }
   };

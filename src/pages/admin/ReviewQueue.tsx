@@ -8,10 +8,35 @@ import {
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
+interface QueueItem {
+  attempt_id: string;
+  submitted_at: string;
+  tutor_name: string;
+  category_name: string;
+  pending_questions: number;
+}
+
+interface AttemptDetails {
+  attempt: {
+    id: string;
+    tutor_name: string;
+    categories: { name: string };
+    section_a_scores: { raw_score: number; max_score: number }[];
+  };
+  submissions: {
+    id: string;
+    answer_text: string;
+    questions: {
+      question_text: string;
+      points: number;
+    };
+  }[];
+}
+
 export default function ReviewQueue() {
-  const [queue, setQueue] = useState<any[]>([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAttempt, setSelectedAttempt] = useState<any>(null);
+  const [selectedAttempt, setSelectedAttempt] = useState<AttemptDetails | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
@@ -24,8 +49,8 @@ export default function ReviewQueue() {
     try {
       setLoading(true);
       const data = await api.getReviewQueue();
-      setQueue(data);
-    } catch (err) {
+      setQueue(data as QueueItem[]);
+    } catch {
       toast.error('Failed to load review queue');
     } finally {
       setLoading(false);
@@ -35,14 +60,14 @@ export default function ReviewQueue() {
   const openReview = async (attemptId: string) => {
     try {
       const data = await api.getAttemptForReview(attemptId);
-      setSelectedAttempt(data);
+      setSelectedAttempt(data as AttemptDetails);
       // Initialize scores
       const initialScores: Record<string, number> = {};
-      data.submissions.forEach((s: any) => {
+      (data as AttemptDetails).submissions.forEach((s) => {
         initialScores[s.id] = 0;
       });
       setScores(initialScores);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load attempt details');
     }
   };
@@ -62,7 +87,7 @@ export default function ReviewQueue() {
     const toastId = toast.loading('Finalizing review...');
 
     try {
-      const reviewPayload = selectedAttempt.submissions.map((s: any) => ({
+      const reviewPayload = selectedAttempt.submissions.map((s) => ({
         submission_id: s.id,
         score: scores[s.id] || 0,
         feedback: feedback[s.id] || ''
@@ -73,7 +98,7 @@ export default function ReviewQueue() {
       toast.success('Review finalized and tutor graded!', { id: toastId });
       setSelectedAttempt(null);
       fetchQueue();
-    } catch (err) {
+    } catch {
       toast.error('Failed to submit review', { id: toastId });
     } finally {
       setReviewLoading(false);

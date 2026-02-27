@@ -52,8 +52,8 @@ export default function AssessmentPage() {
         return;
       }
       setQuestions(allQuestions);
-    } catch (err: any) {
-      setError('Failed to load assessment. ' + err.message);
+    } catch (err) {
+      setError('Failed to load assessment. ' + (err as Error).message);
       toast.error('Network error. Could not fetch assessment data.');
     } finally {
       setLoading(false);
@@ -126,9 +126,9 @@ export default function AssessmentPage() {
           colors: ['#0ea5e9', '#6366f1', '#a855f7']
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to submit attempt:', err);
-      toast.error(err.message || 'Failed to submit. Please try again.', { id: toastId });
+      toast.error((err as Error).message || 'Failed to submit. Please try again.', { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -349,7 +349,7 @@ export default function AssessmentPage() {
               {options.map((option) => (
                 <button
                   key={option.label}
-                  onClick={() => handleOptionSelect(option.label as any)}
+                  onClick={() => handleOptionSelect(option.label as 'A' | 'B' | 'C' | 'D')}
                   disabled={submitting || submitted}
                   className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left flex items-start gap-4 group ${
                     mcAnswers[currentQuestion.id] === option.label

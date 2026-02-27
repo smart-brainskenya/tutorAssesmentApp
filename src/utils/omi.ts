@@ -14,11 +14,16 @@ export interface GroupScore {
   count: number;
 }
 
+interface OmiAttempt {
+  percentage: number;
+  categories?: { name: string };
+}
+
 /**
  * Calculates the Operational Maturity Index (OMI) based on latest attempts per category.
  * Dynamically normalizes weights if groups are missing.
  */
-export function calculateOMI(latestAttempts: any[]): number | null {
+export function calculateOMI(latestAttempts: OmiAttempt[]): number | null {
   if (!latestAttempts || latestAttempts.length === 0) return null;
 
   const scores: Record<string, GroupScore> = {
