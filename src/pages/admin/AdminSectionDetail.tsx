@@ -46,7 +46,7 @@ export default function AdminSectionDetail() {
       setSection(secData);
       setQuestions(qData);
     } catch (err) {
-      toast.error('Failed to load section data');
+      toast.error('Section data missing. Did the dog eat it? 🐶');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function AdminSectionDetail() {
   };
 
   const handleSubmitQuestion = async () => {
-    if (!qText.trim()) return toast.error('Question text required');
+    if (!qText.trim()) return toast.error('Silence is golden, but not here. 🤫 Question text required.');
     
     try {
       const payload: Partial<Question> = {
@@ -101,11 +101,11 @@ export default function AdminSectionDetail() {
       if (editingQuestion) {
         await api.updateQuestion(editingQuestion.id, payload);
         setQuestions(questions.map(q => q.id === editingQuestion.id ? { ...q, ...payload } as Question : q));
-        toast.success('Question updated');
+        toast.success('Question polished! ✨');
       } else {
         const newQ = await api.createQuestion(payload as Omit<Question, 'id' | 'created_at'>);
         setQuestions([...questions, newQ]);
-        toast.success('Question added');
+        toast.success('New riddle added! 🧩');
       }
       resetForm();
     } catch (err: any) {
@@ -124,7 +124,7 @@ export default function AdminSectionDetail() {
       setIsDeleting(true);
       await api.deleteQuestion(questionToDelete.id);
       setQuestions(questions.filter(q => q.id !== questionToDelete.id));
-      toast.success('Question deleted successfully');
+      toast.success('Question vanished! 💨');
       setDeleteModalOpen(false);
       setQuestionToDelete(null);
     } catch (err: any) {
@@ -139,7 +139,7 @@ export default function AdminSectionDetail() {
     setQuestionToDelete(null);
   };
 
-  if (loading) return <div className="p-12 text-center animate-pulse">Loading section content...</div>;
+  if (loading) return <div className="p-12 text-center animate-pulse">One Momment✍️</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">

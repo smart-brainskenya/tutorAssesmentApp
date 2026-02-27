@@ -35,21 +35,21 @@ export default function Manage() {
       const data = await api.getCategories();
       setCategories(data);
     } catch {
-      toast.error('Failed to load categories');
+      toast.error('Categories failed to load. Maybe they\'re on strike? 🪧');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateCategory = async () => {
-    if (!newCatName.trim()) return toast.error('Name required');
+    if (!newCatName.trim()) return toast.error('Every legend needs a name. 🦸 Name required.');
     try {
       setLoading(true);
       const newCat = await api.createCategory(newCatName.trim(), newCatDesc.trim(), false);
       const newCatExtended: ExtendedCategory = { ...newCat, section_count: 0, question_count: 0 };
       setCategories([newCatExtended, ...categories]);
       setNewCatName(''); setNewCatDesc('');
-      toast.success('Category created as Draft');
+      toast.success('New Category hatched! 🐣 (Draft mode)');
     } catch {
       toast.error('Failed to create category');
     } finally {
@@ -67,7 +67,7 @@ export default function Manage() {
       setCategories(categories.map(c => 
         c.id === cat.id ? { ...c, is_published: nextState } : c
       ));
-      toast.success(nextState ? 'Category is now LIVE' : 'Category returned to DRAFT');
+      toast.success(nextState ? 'Category is LIVE! 🔴 Showtime!' : 'Category back in the lab. 🧪 (Draft)');
     } catch {
       toast.error('Failed to update visibility');
     }
@@ -84,7 +84,7 @@ export default function Manage() {
       setIsDeleting(true);
       await api.deleteCategory(categoryToDelete.id);
       setCategories(categories.filter(c => c.id !== categoryToDelete.id));
-      toast.success('Category deleted successfully');
+      toast.success('Category obliterated. 💥');
       setDeleteModalOpen(false);
       setCategoryToDelete(null);
     } catch (error) {

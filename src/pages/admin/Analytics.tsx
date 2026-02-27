@@ -47,7 +47,7 @@ export default function Analytics() {
         });
       }
     } catch (err) {
-      toast.error('Failed to load administrative analytics');
+      toast.error('Analytics machine broke. 📉 Failed to load.');
       console.error('Failed to load admin stats:', err);
     } finally {
       setLoading(false);
@@ -56,12 +56,12 @@ export default function Analytics() {
 
   const exportCSV = () => {
     if (!data?.rawAttempts || data.rawAttempts.length === 0) {
-      toast.error('No data available to export');
+      toast.error('Ghost town here! 👻 No data to export.');
       return;
     }
 
     setExporting(true);
-    const toastId = toast.loading('Generating CSV report...');
+    const toastId = toast.loading('One Momment✍️');
     
     try {
       const headers = ['Tutor', 'Email', 'Category', 'Score', 'Percentage', 'Date'];
@@ -85,9 +85,9 @@ export default function Analytics() {
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Report downloaded!', { id: toastId });
+      toast.success('Hot off the press! 📰 Report downloaded.', { id: toastId });
     } catch (err) {
-      toast.error('Export failed', { id: toastId });
+      toast.error('Printer jam! 🖨️ Export failed.', { id: toastId });
     } finally {
       setExporting(false);
     }
@@ -101,7 +101,7 @@ export default function Analytics() {
   if (loading) return (
     <div className="flex flex-col justify-center items-center py-20 gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-blue"></div>
-      <p className="text-slate-500 font-medium">Aggregating global metrics...</p>
+      <p className="text-slate-500 font-medium">One Momment✍️</p>
     </div>
   );
 
