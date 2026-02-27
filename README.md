@@ -6,23 +6,23 @@ A production-ready internal assessment and performance analytics platform design
 
 -   **Role-Based Access Control**: Strict separation between Admin and Tutor portals.
 -   **Assessment Engine**:
-    -   Multiple Choice & Short Answer support.
-    -   Auto-grading with rubric-based keyword matching.
+    -   Hybrid Model: Multiple Choice (Auto-graded) & Short Answer (Manual Review).
     -   Operational Maturity Index (OMI) calculation.
--   **Analytics Dashboard**:
-    -   Global performance metrics.
-    -   Real-time tutor leaderboard.
-    -   Risk detection for underperforming staff.
+-   **Admin Intelligence**:
+    -   Global performance metrics & trend analysis.
+    -   Manual Review Queue for short answer submissions.
+    -   Real-time tutor leaderboard & risk detection.
+    -   CSV Export for analytics data.
 -   **Security**:
     -   Row Level Security (RLS) enforcement.
-    -   Domain-locked registration.
+    -   Domain-locked registration (`@smartbrainskenya.com`).
     -   15-minute retake lock prevention.
 
 ## 🛠️ Tech Stack
 
 -   **Frontend**: React 19, TypeScript, Vite
--   **Styling**: TailwindCSS, Lucide React
--   **Backend**: Supabase (PostgreSQL + Auth)
+-   **Styling**: TailwindCSS (SBK Brand Palette), Lucide React
+-   **Backend**: Supabase (PostgreSQL + Auth + RPCs)
 -   **State Management**: React Context API
 -   **Visualization**: Recharts
 
@@ -35,20 +35,20 @@ src/
 ├── services/         # API Layer (Supabase interactions)
 ├── store/            # AuthContext & Global State
 ├── types/            # TypeScript Interfaces
-└── utils/            # Helpers (Grading, OMI)
+└── utils/            # Helpers (Grading, OMI, Analytics)
 ```
 
 ## ⚡️ Quick Start
 
 ### 1. Prerequisites
--   Node.js 18+
+-   Node.js 22+ (Bun recommended)
 -   A Supabase project
 
 ### 2. Installation
 ```bash
 git clone <repo-url>
 cd tutorTestApp
-npm install
+bun install
 ```
 
 ### 3. Environment Setup
@@ -83,10 +83,12 @@ This project is optimized for deployment on **Vercel**.
 
 -   **Authentication**: Managed via Supabase Auth (GoTrue).
 -   **Authorization**: Protected Routes (`AdminRoute`, `TutorRoute`) + RLS Policies.
--   **Data Integrity**: Inputs are validated and sanitized; sensitive actions (like role promotion) are server-side verified.
+-   **Data Integrity**:
+    -   Assessments submitted via atomic RPC `create_and_submit_hybrid_attempt`.
+    -   Reviews finalized via RPC `finalize_attempt_review`.
 
 ## 📈 Roadmap
 
--   [ ] Export analytics to PDF.
+-   [ ] Export analytics to PDF (CSV currently supported).
 -   [ ] Real-time notification system.
 -   [ ] Integration with HR management systems.
