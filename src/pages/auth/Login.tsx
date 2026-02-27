@@ -58,29 +58,29 @@ export default function Login() {
       } else {
         navigate('/dashboard');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Unexpected login error:', err);
-      setError(err.message || 'An unexpected error occurred during login');
+      setError((err as Error).message || 'An unexpected error occurred during login');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-sbk-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
+        <div className="inline-flex items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-sbk-slate-100 mb-6">
           <Lightbulb className="w-10 h-10 text-sbk-accent" />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+        <h2 className="text-3xl font-black text-sbk-slate-900 tracking-tight mb-2">
           Tutor Intelligence
         </h2>
-        <p className="text-slate-500 font-medium">
+        <p className="text-sbk-slate-500 font-medium">
           Secure Assessment Portal
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-8 shadow-xl shadow-slate-200/50 border border-slate-100 sm:rounded-2xl">
+        <div className="bg-white py-10 px-8 shadow-xl shadow-sbk-slate-200/50 border border-sbk-slate-100 sm:rounded-2xl">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <Input
@@ -90,7 +90,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@smartbrainskenya.com"
-                className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                className="bg-sbk-slate-50 border-sbk-slate-200 focus:bg-white transition-colors"
               />
             </div>
 
@@ -102,13 +102,13 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                className="bg-sbk-slate-50 border-sbk-slate-200 focus:bg-white transition-colors"
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl font-bold border border-red-100 flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-2 flex-shrink-0" />
+              <div className="p-4 bg-sbk-red-50 text-sbk-red-700 text-sm rounded-xl font-bold border border-sbk-red-100 flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-sbk-red-600 mt-2 flex-shrink-0" />
                 {error}
               </div>
             )}
@@ -122,9 +122,9 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-slate-100">
+          <div className="mt-8 pt-8 border-t border-sbk-slate-100">
             <div className="text-center">
-              <p className="text-sm text-slate-500 mb-3">New to the platform?</p>
+              <p className="text-sm text-sbk-slate-500 mb-3">New to the platform?</p>
               <Link
                 to="/register"
                 className="inline-flex items-center text-sm font-bold text-sbk-primary hover:text-sbk-depth transition-colors"
@@ -135,7 +135,7 @@ export default function Login() {
           </div>
         </div>
         
-        <p className="mt-8 text-center text-xs text-slate-400 font-medium">
+        <p className="mt-8 text-center text-xs text-sbk-slate-400 font-medium">
           &copy; {new Date().getFullYear()} Smart Brains Kenya. All rights reserved.
         </p>
       </div>

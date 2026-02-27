@@ -1,7 +1,11 @@
 import { supabase } from '../lib/supabase';
 import { Category, Question, User, Section } from '../types';
 import { calculateOMI } from '../utils/omi';
-import { transformCategoryData } from '../utils/assessment-transforms';
+import { transformCategoryData, RawCategoryData } from '../utils/assessment-transforms';
+
+interface RawSection extends Section {
+  questions: { count: number }[];
+}
 
 export const api = {
   // Categories
@@ -13,7 +17,7 @@ export const api = {
     
     if (error) throw error;
     
-    return transformCategoryData(data as any[]) as (Category & {
+    return transformCategoryData(data as RawCategoryData[]) as (Category & {
       section_count: number;
       question_count: number;
       section_a_count: number;
@@ -31,7 +35,7 @@ export const api = {
     
     if (error) throw error;
     
-    return transformCategoryData(data as any[]) as (Category & {
+    return transformCategoryData(data as RawCategoryData[]) as (Category & {
       section_count: number;
       question_count: number;
       section_a_count: number;
@@ -96,7 +100,7 @@ export const api = {
       .order('order_index', { ascending: true });
     
     if (error) throw error;
-    return (data as any[]).map(sec => ({
+    return (data as RawSection[]).map((sec) => ({
       ...sec,
       question_count: sec.questions?.[0]?.count || 0
     })) as (Section & { question_count: number })[];
@@ -180,7 +184,7 @@ export const api = {
   // Attempts
   submitHybridAssessment: async (params: {
     categoryId: string,
-    sectionA: { rawScore: number, maxScore: number, snapshot: any },
+    sectionA: { rawScore: number, maxScore: number, snapshot: Record<string, string> },
     sectionB: { questionId: string, answerText: string }[]
   }) => {
     // Calls the atomic RPC to ensure attempt and sections are created together
@@ -248,10 +252,10 @@ export const api = {
 
     if (userError) throw userError;
 
-    return users.map((u: any) => {
+    return users.map((u: { attempts: { percentage: number }[] } & User) => {
       const attempts = u.attempts || [];
       const avg = attempts.length > 0 
-        ? attempts.reduce((acc: number, curr: any) => acc + curr.percentage, 0) / attempts.length 
+        ? attempts.reduce((acc: number, curr: { percentage: number }) => acc + curr.percentage, 0) / attempts.length
         : null;
       
       return {
@@ -368,7 +372,7 @@ export const api = {
       const tAttempts = attempts.filter(a => a.user_id === t.id);
       
       // Get latest attempt per category for OMI
-      const latestByCategory: Record<string, any> = {};
+      const latestByCategory: Record<string, typeof tAttempts[0]> = {};
       tAttempts.forEach(a => {
         if (!latestByCategory[a.category_id] || new Date(a.completed_at) > new Date(latestByCategory[a.category_id].completed_at)) {
           latestByCategory[a.category_id] = a;
