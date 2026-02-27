@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
-import { MetricCard } from '../../components/admin/MetricCard';
+import { CompactMetricCard } from '../../components/admin/CompactMetricCard';
 import { SectionHeader } from '../../components/common/SectionHeader';
+import { calculateScoreTrend, calculateActiveTutorsTrend } from '../../utils/analytics-helpers';
 import {
   Users, TrendingUp, AlertTriangle, Award,
   FileDown, Search
@@ -23,6 +24,7 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [trends, setTrends] = useState<{ score: any, active: any }>({ score: null, active: null });
 
   useEffect(() => {
     fetchData();
@@ -33,6 +35,17 @@ export default function Analytics() {
       setLoading(true);
       const res = await api.getAdminStats();
       setData(res);
+
+      // Calculate trends (ensure only graded attempts are used, although API filters it)
+      if (res.rawAttempts) {
+        const gradedAttempts = res.rawAttempts.filter((a: any) => a.status === 'graded');
+        const scoreTrend = calculateScoreTrend(gradedAttempts, 30);
+        const activeTrend = calculateActiveTutorsTrend(gradedAttempts, 30);
+        setTrends({
+          score: scoreTrend,
+          active: activeTrend
+        });
+      }
     } catch (err) {
       toast.error('Analytics machine broke. 📉 Failed to load.');
       console.error('Failed to load admin stats:', err);
@@ -105,40 +118,66 @@ export default function Analytics() {
           }
         />
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <MetricCard
+        {/* Cleaner Metric Hierarchy */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <CompactMetricCard
             label="Total Tutors"
             value={data.metrics.totalTutors}
-            icon={<Users className="w-5 h-5" />}
-            subtext={`${data.metrics.activeTutorsCount} Active`}
+            icon={<Users className="w-4 h-4" />}
           />
-          <MetricCard
+          <CompactMetricCard
+            label="Active Tutors"
+            value={data.metrics.activeTutorsCount}
+            trend={trends.active ? {
+              value: trends.active.value,
+              label: 'vs last 30d',
+              direction: trends.active.direction
+            } : undefined}
+            icon={<Users className="w-4 h-4" />}
+          />
+          <CompactMetricCard
             label="Global Avg"
             value={`${data.metrics.avgGlobalScore}%`}
-            icon={<TrendingUp className="w-5 h-5" />}
+            trend={trends.score ? {
+              value: `${trends.score.value}%`,
+              label: 'vs last 30d',
+              direction: trends.score.direction
+            } : undefined}
+            icon={<TrendingUp className="w-4 h-4" />}
           />
-          <MetricCard
-            label="Operational Maturity Index"
+          <CompactMetricCard
+            label="Avg OMI"
             value={`${Math.round(data.metrics.avgGlobalOMI)}%`}
-            subtext="Average OMI"
+            icon={<Award className="w-4 h-4" />}
           />
-          <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-lg">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Top Category</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{data.metrics.mostPassed}</p>
-            <p className="text-sm text-green-600 mt-2">✓ Most passed</p>
+        </div>
+
+        {/* Category Performance Highlights */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+            <h3 className="text-xs uppercase tracking-wide text-slate-500 font-medium mb-3">Top Performing Category</h3>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-slate-900">{data.metrics.mostPassed}</p>
+                <p className="text-xs text-slate-500 mt-1">Highest pass rate</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-lg">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Low Category</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{data.metrics.mostFailed}</p>
-            <p className="text-sm text-red-600 mt-2">✗ Most failed</p>
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+            <h3 className="text-xs uppercase tracking-wide text-slate-500 font-medium mb-3">Needs Attention</h3>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-50 text-red-600 rounded-lg">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-slate-900">{data.metrics.mostFailed}</p>
+                <p className="text-xs text-slate-500 mt-1">Lowest average score</p>
+              </div>
+            </div>
           </div>
-          <MetricCard
-            label="At Risk"
-            value={data.metrics.atRiskCount}
-            variant={data.metrics.atRiskCount > 0 ? 'danger' : 'neutral'}
-            subtext={data.metrics.atRiskCount > 0 ? 'Below 60% performance' : 'No tutors flagged'}
-          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -284,5 +323,3 @@ export default function Analytics() {
     </div>
   );
 }
-
-

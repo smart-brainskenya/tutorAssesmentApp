@@ -14,7 +14,7 @@ export const api = {
     
     return (data as any[]).map(cat => {
       const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
+      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) =>
         acc + (sec.questions?.[0]?.count || 0), 0) || 0;
       return {
         ...cat,
@@ -35,7 +35,7 @@ export const api = {
     
     return (data as any[]).map(cat => {
       const totalSections = cat.sections?.length || 0;
-      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) => 
+      const totalQuestions = cat.sections?.reduce((acc: number, sec: any) =>
         acc + (sec.questions?.[0]?.count || 0), 0) || 0;
       return {
         ...cat,
@@ -209,16 +209,28 @@ export const api = {
 
 
 
-  getTutorAttempts: async (userId: string) => {
-    const { data, error } = await supabase
+  getTutorAttempts: async (userId: string, filterStatus: 'graded' | 'all' = 'graded') => {
+    let query = supabase
       .from('attempts')
       .select(`
         *,
-        categories (name)
+        categories (name),
+        section_a_scores (raw_score, max_score),
+        section_b_submissions (
+          id,
+          question_id,
+          answer_text,
+          questions (question_text, points),
+          reviews (score, feedback)
+        )
       `)
-      .eq('user_id', userId)
-      .eq('status', 'graded') // Only show finalized results to tutors
-      .order('completed_at', { ascending: false });
+      .eq('user_id', userId);
+
+    if (filterStatus === 'graded') {
+      query = query.eq('status', 'graded'); // Only show finalized results to tutors by default
+    }
+
+    const { data, error } = await query.order('completed_at', { ascending: false });
 
     if (error) throw error;
     return data;

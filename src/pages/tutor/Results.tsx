@@ -4,7 +4,9 @@ import { api } from '../../services/api';
 import { 
   Zap, 
   ArrowLeft, CheckCircle2,
-  BarChart3, Award
+  BarChart3, Award,
+  TrendingUp, TrendingDown, Minus,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +17,7 @@ export default function Results() {
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,6 +78,43 @@ export default function Results() {
     if (pct < 60) return "Focus on improving your weakest category.";
     if (pct < 80) return "You're progressing well.";
     return "Excellent work. Keep maintaining this standard.";
+  };
+
+  const getAttemptDetails = (attempt: any) => {
+    // Section A
+    const secA = attempt.section_a_scores?.[0];
+    const scoreA = secA ? secA.raw_score : 0;
+    const maxA = secA ? secA.max_score : 0;
+
+    // Section B
+    let scoreB = 0;
+    let maxB = 0;
+
+    if (attempt.section_b_submissions) {
+      attempt.section_b_submissions.forEach((sub: any) => {
+        const questionPoints = sub.questions?.points || 0;
+        const reviewScore = sub.reviews?.[0]?.score || 0;
+        maxB += questionPoints;
+        scoreB += reviewScore;
+      });
+    }
+
+    return {
+      scoreA,
+      maxA,
+      scoreB,
+      maxB
+    };
+  };
+
+  const getTrend = (idx: number) => {
+    if (idx >= attempts.length - 1) return 'neutral';
+    const current = attempts[idx];
+    const previous = attempts[idx + 1];
+
+    if (current.percentage > previous.percentage) return 'up';
+    if (current.percentage < previous.percentage) return 'down';
+    return 'neutral';
   };
 
   if (loading) {
@@ -208,38 +248,128 @@ export default function Results() {
                 <tr>
                   <th className="px-8 py-5">Assessment Category</th>
                   <th className="px-8 py-5">Date</th>
-                  <th className="px-8 py-5">Score</th>
+                  <th className="px-8 py-5 text-center">Section A</th>
+                  <th className="px-8 py-5 text-center">Section B</th>
+                  <th className="px-8 py-5 text-center">Total Score</th>
                   <th className="px-8 py-5 text-right">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {attempts.map((attempt) => {
+                {attempts.map((attempt, idx) => {
                   const attemptRank = getRanking(attempt.percentage);
+                  const { scoreA, maxA, scoreB, maxB } = getAttemptDetails(attempt);
+                  const trend = getTrend(idx);
+                  const isExpanded = expandedId === attempt.id;
+
                   return (
-                    <tr key={attempt.id} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-8 py-6">
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
-                          {attempt.categories?.name}
-                        </p>
-                      </td>
-                      <td className="px-8 py-6 text-slate-500 font-medium whitespace-nowrap">
-                        {new Date(attempt.completed_at).toLocaleDateString('en-GB', { 
-                          day: '2-digit', 
-                          month: 'short', 
-                          year: 'numeric' 
-                        })}
-                      </td>
-                      <td className="px-8 py-6">
-                        <span className="text-slate-700 font-bold tabular-nums">
-                          {attempt.score} Questions
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <span className={`inline-block px-3 py-1 rounded-lg font-black text-xs ${attemptRank.bg} ${attemptRank.color} border border-transparent group-hover:${attemptRank.border} transition-all`}>
-                          {Math.round(attempt.percentage)}%
-                        </span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr
+                        key={attempt.id}
+                        onClick={() => setExpandedId(isExpanded ? null : attempt.id)}
+                        className="hover:bg-slate-50 transition-colors group cursor-pointer border-b border-slate-100"
+                      >
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-2">
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                            <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
+                              {attempt.categories?.name}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-slate-500 font-medium whitespace-nowrap">
+                          {new Date(attempt.completed_at).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                          <span className="text-slate-700 font-bold tabular-nums">
+                            {scoreA}
+                          </span>
+                          <span className="text-slate-400 text-xs ml-1">/ {maxA}</span>
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                          <span className="text-slate-700 font-bold tabular-nums">
+                            {scoreB}
+                          </span>
+                          <span className="text-slate-400 text-xs ml-1">/ {maxB}</span>
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                           <span className="text-slate-900 font-black tabular-nums">
+                            {attempt.score}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            {trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500" />}
+                            {trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
+                            {trend === 'neutral' && <Minus className="w-4 h-4 text-slate-300" />}
+
+                            <span className={`inline-block px-3 py-1 rounded-lg font-black text-xs ${attemptRank.bg} ${attemptRank.color} border border-transparent group-hover:${attemptRank.border} transition-all`}>
+                              {Math.round(attempt.percentage)}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-slate-50/50">
+                          <td colSpan={6} className="px-8 py-8">
+                            <div className="max-w-4xl mx-auto space-y-6">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">Detailed Feedback</h4>
+                                {attempt.section_b_submissions?.some((s: any) => s.reviews?.[0]) && (
+                                  <span className="text-xs font-bold text-primary-600 bg-primary-50 px-3 py-1 rounded-full">
+                                    Admin Reviewed
+                                  </span>
+                                )}
+                              </div>
+
+                              {attempt.section_b_submissions?.length > 0 ? (
+                                <div className="space-y-4">
+                                  {attempt.section_b_submissions.map((sub: any) => (
+                                    <div key={sub.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                      <div className="flex justify-between items-start mb-4">
+                                        <p className="text-sm font-bold text-slate-900 flex-1 pr-8">{sub.questions?.question_text}</p>
+                                        <div className="text-xs font-black text-slate-400 whitespace-nowrap bg-slate-100 px-2 py-1 rounded">
+                                          Max: {sub.questions?.points} pts
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Your Answer</p>
+                                        <p className="text-sm text-slate-700 italic whitespace-pre-wrap">{sub.answer_text}</p>
+                                      </div>
+
+                                      {sub.reviews?.[0] ? (
+                                        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest">Tutor Feedback</p>
+                                            <span className={`text-xs font-black px-2 py-0.5 rounded ${sub.reviews[0].score >= (sub.questions?.points * 0.6) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                              Score: {sub.reviews[0].score}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-slate-700">{sub.reviews[0].feedback || "No written feedback provided."}</p>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2 text-slate-400 text-sm italic">
+                                          <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                                          Pending Review
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8 text-slate-500 text-sm">
+                                  No Section B submissions found for this attempt.
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </tbody>
