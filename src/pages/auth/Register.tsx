@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { ShieldCheck, Lightbulb } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -11,17 +12,15 @@ export default function Register() {
   const [fullName, setFullName] = useState('');
   const [passcode, setPasscode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     // Email domain validation
     if (!email.toLowerCase().endsWith('@smartbrainskenya.com')) {
-      setError('Only @smartbrainskenya.com email addresses are allowed.');
+      toast.error('Only @smartbrainskenya.com email addresses are allowed.');
       setLoading(false);
       return;
     }
@@ -29,7 +28,7 @@ export default function Register() {
     // Access Passcode validation
     const requiredPasscode = import.meta.env.VITE_SBK_ACCESS_CODE;
     if (passcode !== requiredPasscode) {
-      setError('Invalid Access Passcode. Contact IT for the code.');
+      toast.error('Invalid Access Passcode. Contact IT for the code.');
       setLoading(false);
       return;
     }
@@ -49,32 +48,33 @@ export default function Register() {
       if (signUpError) throw signUpError;
       
       if (data.user) {
-        alert('Registration request successful! Please sign in.');
+        toast.success('Registration request successful! Please sign in.');
+        setLoading(false);
         navigate('/login');
       }
-    } catch (err) {
-      setError((err as Error).message || 'Failed to register');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to register');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sbk-primary/5 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-sbk-slate-50 via-white to-sbk-primary/5 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex items-center justify-center p-4 bg-sbk-primary/10 rounded-xl mb-4">
           <Lightbulb className="w-8 h-8 text-sbk-primary" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-bold text-sbk-slate-900 tracking-tight">
           SBK Tutor Registration
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-sbk-slate-600">
           Create your internal account
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm border border-slate-200 sm:rounded-lg sm:px-10">
+        <div className="bg-white py-8 px-4 shadow-sm border border-sbk-slate-200 sm:rounded-lg sm:px-10">
           <form className="space-y-5" onSubmit={handleRegister}>
             <Input
               label="Full Name"
@@ -113,14 +113,8 @@ export default function Register() {
                 onChange={(e) => setPasscode(e.target.value)}
                 placeholder="Enter secret passcode"
               />
-              <ShieldCheck className="absolute right-3 top-[34px] w-5 h-5 text-slate-300" />
+              <ShieldCheck className="absolute right-3 top-[34px] w-5 h-5 text-sbk-slate-300" />
             </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md font-medium border border-red-100">
-                {error}
-              </div>
-            )}
 
             <Button
               type="submit"
