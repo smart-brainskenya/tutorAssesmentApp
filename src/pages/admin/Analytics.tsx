@@ -152,6 +152,8 @@ export default function Analytics() {
     </div>
   );
 
+  if (!data) return null;
+
   return (
     <div className="min-h-screen bg-sbk-slate-50 pb-12">
       <div className="max-w-7xl mx-auto px-6 py-8">

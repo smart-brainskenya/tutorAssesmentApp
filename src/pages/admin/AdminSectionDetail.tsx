@@ -52,22 +52,6 @@ export default function AdminSectionDetail() {
     if (id) fetchData();
   }, [id]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [secData, qData] = await Promise.all([
-        api.getSectionById(id!),
-        api.getQuestionsBySection(id!)
-      ]);
-      setSection(secData);
-      setQuestions(qData);
-    } catch (err) {
-      toast.error('Section data missing. Did the dog eat it? 🐶');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleEditClick = (q: Question) => {
     setEditingQuestion(q);
     setQText(q.question_text);

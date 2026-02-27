@@ -15,7 +15,7 @@ interface Tutor {
   is_active: boolean;
   total_attempts: number;
   average_score: number | null;
-  last_login: string | null;
+  last_login?: string;
 }
 
 export default function Tutors() {

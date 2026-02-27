@@ -126,7 +126,7 @@ export default function AssessmentPage() {
           colors: ['#0ea5e9', '#6366f1', '#a855f7']
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to submit attempt:', err);
       toast.error(err.message || 'Submission blocked by the firewall of doom! 🛡️ Try again.', { id: toastId });
     } finally {
