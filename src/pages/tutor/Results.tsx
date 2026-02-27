@@ -4,7 +4,9 @@ import { api } from '../../services/api';
 import { 
   Zap, 
   ArrowLeft, CheckCircle2,
-  BarChart3, Award
+  BarChart3, Award,
+  TrendingUp, TrendingDown, Minus,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +27,7 @@ export default function Results() {
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,6 +88,43 @@ export default function Results() {
     if (pct < 60) return "Focus on improving your weakest category.";
     if (pct < 80) return "You're progressing well.";
     return "Excellent work. Keep maintaining this standard.";
+  };
+
+  const getAttemptDetails = (attempt: any) => {
+    // Section A
+    const secA = attempt.section_a_scores?.[0];
+    const scoreA = secA ? secA.raw_score : 0;
+    const maxA = secA ? secA.max_score : 0;
+
+    // Section B
+    let scoreB = 0;
+    let maxB = 0;
+
+    if (attempt.section_b_submissions) {
+      attempt.section_b_submissions.forEach((sub: any) => {
+        const questionPoints = sub.questions?.points || 0;
+        const reviewScore = sub.reviews?.[0]?.score || 0;
+        maxB += questionPoints;
+        scoreB += reviewScore;
+      });
+    }
+
+    return {
+      scoreA,
+      maxA,
+      scoreB,
+      maxB
+    };
+  };
+
+  const getTrend = (idx: number) => {
+    if (idx >= attempts.length - 1) return 'neutral';
+    const current = attempts[idx];
+    const previous = attempts[idx + 1];
+
+    if (current.percentage > previous.percentage) return 'up';
+    if (current.percentage < previous.percentage) return 'down';
+    return 'neutral';
   };
 
   if (loading) {
@@ -217,13 +257,19 @@ export default function Results() {
                 <tr>
                   <th className="px-8 py-5">Assessment Category</th>
                   <th className="px-8 py-5">Date</th>
-                  <th className="px-8 py-5">Score</th>
+                  <th className="px-8 py-5 text-center">Section A</th>
+                  <th className="px-8 py-5 text-center">Section B</th>
+                  <th className="px-8 py-5 text-center">Total Score</th>
                   <th className="px-8 py-5 text-right">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-sbk-slate-100">
                 {attempts.map((attempt) => {
                   const attemptRank = getRanking(attempt.percentage);
+                  const { scoreA, maxA, scoreB, maxB } = getAttemptDetails(attempt);
+                  const trend = getTrend(idx);
+                  const isExpanded = expandedId === attempt.id;
+
                   return (
                     <tr key={attempt.id} className="hover:bg-sbk-slate-50 transition-colors group">
                       <td className="px-8 py-6">
