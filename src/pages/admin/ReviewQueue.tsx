@@ -1,3 +1,5 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
@@ -108,12 +110,7 @@ export default function ReviewQueue() {
     }
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">

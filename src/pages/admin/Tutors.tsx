@@ -1,3 +1,5 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Table } from '../../components/common/Table';
@@ -90,12 +92,7 @@ export default function Tutors() {
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sbk-slate-50 via-white to-sbk-slate-50/50 space-y-8 pb-16 animate-in fade-in duration-500">

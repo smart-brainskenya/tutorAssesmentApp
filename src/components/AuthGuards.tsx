@@ -1,19 +1,13 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
+import { LoadingSpinner } from './common/LoadingSpinner';
 
 /**
  * Universal Loading Spinner
  */
 export function AuthLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-sbk-slate-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p className="text-slate-500 font-medium animate-pulse text-sm">One Momment✍️</p>
-      </div>
-    </div>
-  );
+  return <LoadingSpinner fullScreen />;
 }
 
 /**

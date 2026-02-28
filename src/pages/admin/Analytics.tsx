@@ -1,3 +1,5 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
@@ -146,12 +148,7 @@ export default function Analytics() {
     t.email.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  if (loading) return (
-    <div className="flex flex-col justify-center items-center py-20 gap-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-blue"></div>
-      <p className="text-slate-500 font-medium">One Momment✍️</p>
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
 
   if (!data) return null;
 

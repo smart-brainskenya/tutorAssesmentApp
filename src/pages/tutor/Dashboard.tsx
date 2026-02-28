@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../store/AuthContext';
 import { BookOpen, Award, ChevronRight, Clock, HelpCircle } from 'lucide-react';
@@ -243,8 +244,7 @@ export default function Dashboard() {
 
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-primary"></div>
-          <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
+          <LoadingSpinner />
         </div>
       ) : (
         <>

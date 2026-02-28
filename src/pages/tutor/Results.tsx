@@ -1,3 +1,5 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../store/AuthContext';
 import { api } from '../../services/api';
@@ -114,14 +116,7 @@ export default function Results() {
   //   };
   // };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        <p className="text-slate-500 font-medium mt-4">One Momment✍️</p>
-      </div>
-    );
-  }
+  if (loading) { return <LoadingSpinner />; }
 
   if (!stats) {
     return (
