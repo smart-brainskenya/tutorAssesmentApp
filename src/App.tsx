@@ -7,6 +7,7 @@ import { Layout } from './components/layout/Layout';
 import { lazy, Suspense } from 'react';
 
 // Lazy Load Pages
+const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const TutorDashboard = lazy(() => import('./pages/tutor/Dashboard'));
@@ -44,11 +45,9 @@ function App() {
           <Suspense fallback={<AuthLoading />}>
             <Routes>
               {/* Public Routes */}
+              <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-              
-              {/* Root Redirector handled by PublicRoute logic on /login or guards on protected */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
               
               {/* Tutor Routes */}
               <Route path="/dashboard" element={
