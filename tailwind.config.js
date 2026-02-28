@@ -5,22 +5,24 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    // Disable default colors to enforce strict design system usage
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      white: '#ffffff',
+      black: '#000000',
+    },
     extend: {
+      animation: {
+        'breathe': 'breathe 2.5s ease-in-out infinite',
+      },
+      keyframes: {
+        breathe: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.1)', opacity: '0.85' },
+        }
+      },
       colors: {
-        // Primary - Tailwind default for backwards compatibility
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
-        },
         // SBK Brand Colors - Complete palette
         sbk: {
           // Primary brand color
@@ -42,6 +44,17 @@ export default {
           success: '#10B981',    // Muted green
           warning: '#F59E0B',    // Soft amber
           danger: '#DC2626',     // Controlled red
+          info: '#3B82F6',       // Blue for info
+
+          // Semantic Backgrounds
+          'success-50': '#ecfdf5',
+          'success-100': '#d1fae5',
+          'warning-50': '#fffbeb',
+          'warning-100': '#fef3c7',
+          'danger-50': '#fef2f2',
+          'danger-100': '#fee2e2',
+          'info-50': '#eff6ff',
+          'info-100': '#dbeafe',
 
           // Neutral palette
           neutral: {
@@ -54,7 +67,27 @@ export default {
           slate: {
             50: '#F8FAFC',
             100: '#F1F5F9',
+            200: '#E2E8F0',
+            300: '#CBD5E1',
+            400: '#94A3B8',
+            500: '#64748B',
+            600: '#475569',
             700: '#334155',
+            800: '#1E293B',
+            900: '#0F172A',
+          },
+
+          // Gray palette (for legacy support if needed, mapped to slate)
+          gray: {
+            50: '#F8FAFC',
+            100: '#F1F5F9',
+            200: '#E2E8F0',
+            300: '#CBD5E1',
+            400: '#94A3B8',
+            500: '#64748B',
+            600: '#475569',
+            700: '#334155',
+            800: '#1E293B',
             900: '#0F172A',
           }
         },
@@ -63,4 +96,3 @@ export default {
   },
   plugins: [],
 }
-

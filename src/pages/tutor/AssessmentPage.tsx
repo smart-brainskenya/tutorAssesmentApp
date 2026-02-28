@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/AuthContext';
@@ -138,8 +139,7 @@ export default function AssessmentPage() {
 
   if (loading) return (
     <div className="flex flex-col justify-center items-center min-h-[50vh] gap-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sbk-primary"></div>
-      <p className="text-slate-600 font-medium">One Momment✍️</p>
+      <LoadingSpinner />
     </div>
   );
 

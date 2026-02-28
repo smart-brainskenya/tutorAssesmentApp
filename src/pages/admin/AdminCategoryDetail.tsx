@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
@@ -98,7 +99,7 @@ export default function AdminCategoryDetail() {
     setSectionToDelete(null);
   };
 
-  if (loading) return <div className="p-12 text-center text-slate-600">One Momment✍️</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
