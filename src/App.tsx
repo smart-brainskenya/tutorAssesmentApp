@@ -56,6 +56,11 @@ function App() {
                   <AuthenticatedLayout><TutorDashboard /></AuthenticatedLayout>
                 </ProtectedRoute>
               } />
+              <Route path="/assessments" element={
+                <ProtectedRoute requiredRole="tutor">
+                  <Navigate to="/dashboard" state={{ initialView: 'tests' }} replace />
+                </ProtectedRoute>
+              } />
               <Route path="/assessments/:id" element={
                 <ProtectedRoute requiredRole="tutor">
                   <AuthenticatedLayout><AssessmentPage /></AuthenticatedLayout>
