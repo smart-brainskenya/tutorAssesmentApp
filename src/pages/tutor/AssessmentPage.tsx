@@ -302,9 +302,9 @@ export default function AssessmentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sbk-slate-50 via-white to-sbk-slate-50/50">
       {/* Top Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-sbk-slate-100 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1.5 bg-sbk-slate-100 z-50">
         <div
-          className="h-full bg-gradient-to-r from-sbk-blue to-sbk-teal transition-all duration-500"
+          className="h-full bg-gradient-to-r from-sbk-accent-orange to-sbk-accent-yellow transition-all duration-500 rounded-r-full"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
         ></div>
       </div>
@@ -314,7 +314,7 @@ export default function AssessmentPage() {
         <div className="mb-10 text-center">
           {currentSection && (
              <div className="mb-2">
-                <span className="text-sm font-black text-sbk-primary uppercase tracking-[0.2em] bg-sbk-primary/10 px-4 py-1 rounded-full">
+                <span className="text-sm font-black text-sbk-blue-dark uppercase tracking-[0.2em] bg-sbk-blue-dark/10 px-4 py-1 rounded-full">
                   {currentSection.title}
                 </span>
              </div>
@@ -324,7 +324,7 @@ export default function AssessmentPage() {
           </div>
           <div className="w-48 h-1 bg-sbk-slate-100 rounded-full overflow-hidden mx-auto">
             <div
-              className="h-full bg-gradient-to-r from-sbk-primary to-sbk-depth transition-all duration-500"
+              className="h-full bg-gradient-to-r from-sbk-accent-orange to-sbk-accent-yellow transition-all duration-500"
               style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
             ></div>
           </div>
@@ -355,15 +355,15 @@ export default function AssessmentPage() {
                   disabled={submitting || submitted}
                   className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left flex items-start gap-4 group ${
                     mcAnswers[currentQuestion.id] === option.label
-                      ? 'border-sbk-primary bg-sbk-primary/10 shadow-md'
-                      : 'border-sbk-slate-200 hover:border-sbk-primary/30 hover:bg-sbk-slate-50 hover:shadow-sm'
+                      ? 'border-sbk-blue-dark bg-sbk-blue-light/10 shadow-md ring-2 ring-sbk-blue-light/50 ring-offset-1'
+                      : 'border-sbk-slate-200 hover:border-sbk-blue-light hover:bg-sbk-bg-alt hover:shadow-sm'
                   } ${(submitting || submitted) ? 'cursor-not-allowed opacity-75' : 'cursor-pointer active:scale-[0.99]'}`}
                 >
                   {/* Option Letter Button */}
                   <div className={`flex-shrink-0 w-10 h-10 rounded-lg border-2 flex items-center justify-center font-bold text-sm transition-all duration-200 ${
                     mcAnswers[currentQuestion.id] === option.label
-                      ? 'bg-sbk-primary border-sbk-primary text-white'
-                      : 'bg-white border-sbk-slate-300 text-sbk-slate-600 group-hover:border-sbk-primary/40'
+                      ? 'bg-sbk-blue-dark border-sbk-blue-dark text-white scale-110'
+                      : 'bg-white border-sbk-slate-300 text-sbk-slate-600 group-hover:border-sbk-blue-light/50'
                   }`}>
                     {option.label}
                   </div>
@@ -386,7 +386,7 @@ export default function AssessmentPage() {
                   Your Answer
                 </label>
                 <textarea
-                    className="w-full h-48 p-5 rounded-xl border-2 border-sbk-slate-200 focus:border-sbk-primary focus:ring-4 focus:ring-sbk-primary/10 focus:outline-none transition-all duration-200 resize-none text-lg leading-relaxed text-sbk-slate-700 placeholder-slate-400 font-medium"
+                    className="w-full h-48 p-5 rounded-xl border-2 border-sbk-slate-200 focus:border-sbk-blue-light focus:ring-4 focus:ring-sbk-blue-light/20 focus:outline-none transition-all duration-200 resize-none text-lg leading-relaxed text-sbk-slate-700 placeholder-slate-400 font-medium"
                   placeholder="Type your detailed response here. Be thorough and clear in your answer..."
                   value={textAnswers[currentQuestion.id] || ''}
                   onChange={(e) => handleTextChange(e.target.value)}
@@ -438,7 +438,7 @@ export default function AssessmentPage() {
               onClick={handleSubmit}
               disabled={!isAnswered || submitting || submitted}
               isLoading={submitting}
-              className="px-8 shadow-lg shadow-sbk-blue/20 hover:shadow-xl hover:shadow-sbk-blue/30 transition-all duration-200"
+              className="px-8 bg-sbk-blue-dark text-white hover:opacity-90 shadow-lg shadow-sbk-blue-dark/20 hover:shadow-xl hover:shadow-sbk-blue-dark/40 transition-all duration-200"
             >
               <Trophy className="w-5 h-5 mr-2" />
               Submit Assessment
@@ -448,7 +448,7 @@ export default function AssessmentPage() {
               size="lg"
               onClick={() => setCurrentIndex(currentIndex + 1)}
               disabled={!isAnswered || submitting || submitted}
-              className="px-8 shadow-lg shadow-sbk-blue/20 hover:shadow-xl hover:shadow-sbk-blue/30 transition-all duration-200"
+              className="px-8 bg-sbk-blue-dark text-white hover:opacity-90 shadow-lg shadow-sbk-blue-dark/20 hover:shadow-xl hover:shadow-sbk-blue-dark/40 transition-all duration-200"
             >
               Next Question <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
