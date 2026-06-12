@@ -191,8 +191,8 @@ export default function ReviewQueue() {
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10">
               {/* Section A Summary */}
-              <section className="bg-sbk-blue/10 border border-sbk-blue/20 rounded-xl p-6">
-                <h3 className="text-sm font-black text-sbk-blue uppercase tracking-widest mb-4 flex items-center gap-2">
+              <section className="bg-sbk-blue-dark/5 border border-sbk-blue-light/30 rounded-xl p-6">
+                <h3 className="text-sm font-black text-sbk-blue-dark uppercase tracking-widest mb-4 flex items-center gap-2">
                   <ClipboardCheck className="w-4 h-4" /> Section A Results (Auto-Graded)
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -220,7 +220,7 @@ export default function ReviewQueue() {
                       <p className="text-lg font-bold text-sbk-slate-900 mt-1">{sub.questions.question_text}</p>
                     </div>
                     <div className="p-6 space-y-6">
-                      <div className="bg-sbk-slate-50 rounded-lg p-5 border-l-4 border-sbk-blue">
+                      <div className="bg-sbk-slate-50 rounded-lg p-5 border-l-4 border-sbk-blue-dark">
                         <p className="text-xs font-bold text-sbk-slate-400 uppercase mb-2">Tutor Response</p>
                         <p className="text-sbk-slate-800 whitespace-pre-wrap leading-relaxed">{sub.answer_text}</p>
                       </div>
@@ -236,7 +236,7 @@ export default function ReviewQueue() {
                             min={0}
                             value={scores[sub.id]}
                             onChange={(e) => handleScoreChange(sub.id, parseInt(e.target.value) || 0)}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue outline-none transition-all font-bold text-lg"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue-light outline-none transition-all font-bold text-lg"
                           />
                         </div>
                         <div>
@@ -247,7 +247,7 @@ export default function ReviewQueue() {
                             value={feedback[sub.id]}
                             onChange={(e) => handleFeedbackChange(sub.id, e.target.value)}
                             placeholder="Constructive feedback for the tutor..."
-                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue outline-none transition-all h-24 resize-none"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-sbk-slate-200 focus:border-sbk-blue-light outline-none transition-all h-24 resize-none"
                           />
                         </div>
                       </div>
