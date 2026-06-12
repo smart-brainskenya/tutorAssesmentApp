@@ -96,23 +96,23 @@ export default function Dashboard() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-12">
       <div
         onClick={() => setView('tests')}
-        className="group bg-white p-8 rounded-lg border border-sbk-slate-200 shadow-sm hover:border-sbk-primary hover:shadow-md transition-all duration-200 cursor-pointer text-center"
+        className="group bg-white p-8 rounded-lg border border-sbk-slate-200 shadow-sm hover:border-sbk-blue-dark hover:shadow-md hover:ring-2 hover:ring-sbk-blue-light/50 hover:ring-offset-1 transition-all duration-300 cursor-pointer text-center"
       >
-        <div className="inline-flex p-4 bg-sbk-primary/10 text-sbk-primary rounded-lg mb-6 group-hover:scale-110 transition-transform">
+        <div className="inline-flex p-4 bg-sbk-blue-dark/10 text-sbk-blue-dark rounded-lg mb-6 group-hover:scale-110 transition-transform">
           <BookOpen className="w-10 h-10" />
         </div>
-        <h2 className="text-lg font-semibold text-sbk-slate-900 mb-2">Take Tests</h2>
+        <h2 className="text-lg font-display font-semibold text-sbk-slate-900 mb-2">Take Tests</h2>
         <p className="text-sm text-sbk-slate-600">Access published assessments and test your knowledge.</p>
       </div>
 
       <div
         onClick={() => setView('results')}
-        className="group bg-white p-8 rounded-lg border border-sbk-slate-200 shadow-sm hover:border-sbk-primary hover:shadow-md transition-all duration-200 cursor-pointer text-center"
+        className="group bg-white p-8 rounded-lg border border-sbk-slate-200 shadow-sm hover:border-sbk-blue-dark hover:shadow-md hover:ring-2 hover:ring-sbk-blue-light/50 hover:ring-offset-1 transition-all duration-300 cursor-pointer text-center"
       >
-        <div className="inline-flex p-4 bg-sbk-amber-100 text-sbk-amber-600 rounded-lg mb-6 group-hover:scale-110 transition-transform">
+        <div className="inline-flex p-4 bg-sbk-accent-yellow/20 text-sbk-accent-orange rounded-lg mb-6 group-hover:scale-110 transition-transform">
           <Award className="w-10 h-10" />
         </div>
-        <h2 className="text-lg font-semibold text-sbk-slate-900 mb-2">My Results</h2>
+        <h2 className="text-lg font-display font-semibold text-sbk-slate-900 mb-2">My Results</h2>
         <p className="text-sm text-sbk-slate-600">Review your past performance and rankings.</p>
       </div>
     </div>

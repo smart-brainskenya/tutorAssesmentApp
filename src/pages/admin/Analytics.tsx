@@ -224,7 +224,7 @@ export default function Analytics() {
                 <input
                   type="text"
                   placeholder="Search tutors..."
-                  className="pl-9 pr-4 py-2 text-sm rounded-lg border border-sbk-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sbk-primary w-full md:w-64 transition-all"
+                  className="pl-9 pr-4 py-2 text-sm rounded-lg border border-sbk-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sbk-blue-light w-full md:w-64 transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -241,11 +241,11 @@ export default function Analytics() {
                   filteredLeaderboard.map((t, idx) => {
                     const rank = idx + 1;
                     const omi = t.omi ?? null;
-                    const omiColor = omi !== null ? (omi >= 75 ? 'bg-sbk-primary' : omi >= 60 ? 'bg-sbk-depth' : 'bg-sbk-warning') : 'bg-sbk-slate-200';
+                    const omiColor = omi !== null ? (omi >= 75 ? 'bg-sbk-accent-yellow' : omi >= 60 ? 'bg-sbk-blue-light' : 'bg-sbk-warning') : 'bg-sbk-slate-200';
                     return (
                       <div key={t.id} className="flex items-center justify-between px-6 py-4 hover:bg-sbk-slate-50 transition-colors">
                         <div className="flex items-center gap-4 min-w-0">
-                          <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm flex-shrink-0 ${rank === 1 ? 'bg-sbk-primary/10 text-sbk-primary' : 'bg-sbk-slate-100 text-sbk-slate-700'}`}>{rank}</span>
+                          <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm flex-shrink-0 ${rank === 1 ? 'bg-sbk-blue-dark/10 text-sbk-blue-dark' : 'bg-sbk-slate-100 text-sbk-slate-700'}`}>{rank}</span>
                           <div className="min-w-0">
                             <p className="font-semibold text-sbk-slate-900 truncate">{t.full_name}</p>
                             <p className="text-xs text-sbk-slate-500 truncate">{t.email}</p>

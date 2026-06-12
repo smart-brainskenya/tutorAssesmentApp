@@ -22,63 +22,40 @@ export default {
           '50%': { transform: 'scale(1.1)', opacity: '0.85' },
         }
       },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
-        // SBK Brand Colors - Complete palette
+        // SBK Brand Colors - Redesigned
         sbk: {
-          // Primary brand color
-          primary: '#3B9DD9',    // Deep navy blue (main CTA, focus states)
-
-          // Accent colors for highlights
-          accent: '#F5A623',     // Warm gold/orange (highlights, badges)
-
-          // Depth color for secondary elements
-          depth: '#2C7A9E',      // Darker teal (hover states, secondary buttons)
-
-          // Legacy names (maintained for backwards compatibility)
-          blue: '#3B9DD9',
-          orange: '#F5A623',
-          teal: '#2C7A9E',
-          gold: '#FFC107',
+          // Primary brand colors
+          blue: {
+            dark: '#1054b8',   // Main CTA, headers
+            light: '#6fb8ea',  // Hover states, highlights
+          },
+          accent: {
+            orange: '#ffa500', // Badges, rank highlights
+            yellow: '#f2be40', // Elite highlights
+          },
+          bg: {
+            main: '#ffffff',
+            alt: '#ebeaea',
+          },
+          // Legacy mappings to prevent app breaking during refactor
+          primary: '#1054b8',    // Map to dark blue
+          accent_legacy: '#ffa500', // Map to orange
+          depth: '#1054b8',      // Map to dark blue
 
           // Semantic colors for feedback
-          success: '#10B981',    // Muted green
-          warning: '#F59E0B',    // Soft amber
-          danger: '#DC2626',     // Controlled red
-          info: '#3B82F6',       // Blue for info
-
-          // Semantic Backgrounds
-          'success-50': '#ecfdf5',
-          'success-100': '#d1fae5',
-          'warning-50': '#fffbeb',
-          'warning-100': '#fef3c7',
-          'danger-50': '#fef2f2',
-          'danger-100': '#fee2e2',
-          'info-50': '#eff6ff',
-          'info-100': '#dbeafe',
-
-          // Neutral palette
-          neutral: {
-            light: '#F8FAFC',    // Very light background
-            border: '#E2E8F0',   // Border color
-            text: '#334155',     // Primary text
-          },
+          success: '#10B981',
+          warning: '#F59E0B',
+          danger: '#DC2626',
+          info: '#6fb8ea',
 
           // Slate palette (maintained for backwards compatibility)
           slate: {
-            50: '#F8FAFC',
-            100: '#F1F5F9',
-            200: '#E2E8F0',
-            300: '#CBD5E1',
-            400: '#94A3B8',
-            500: '#64748B',
-            600: '#475569',
-            700: '#334155',
-            800: '#1E293B',
-            900: '#0F172A',
-          },
-
-          // Gray palette (for legacy support if needed, mapped to slate)
-          gray: {
             50: '#F8FAFC',
             100: '#F1F5F9',
             200: '#E2E8F0',

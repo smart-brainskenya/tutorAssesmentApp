@@ -15,9 +15,9 @@ interface TableProps<T> {
 
 export function Table<T>({ data, columns, keyExtractor, emptyMessage = 'No data available.' }: TableProps<T>) {
   return (
-    <div className="overflow-x-auto bg-white rounded-xl border border-sbk-slate-200 shadow-sm">
+    <div className="overflow-x-auto bg-sbk-bg-main rounded-xl border border-sbk-slate-200 shadow-sm">
       <table className="w-full text-left text-sm border-collapse">
-        <thead className="bg-sbk-slate-50 text-sbk-slate-500 font-bold border-b border-sbk-slate-100">
+        <thead className="bg-sbk-bg-alt text-sbk-blue-dark font-bold border-b border-sbk-slate-200">
           <tr>
             {columns.map((col, i) => (
               <th key={i} className={`px-6 py-4 uppercase tracking-wider text-[11px] ${col.className || ''}`}>
@@ -35,7 +35,7 @@ export function Table<T>({ data, columns, keyExtractor, emptyMessage = 'No data 
             </tr>
           ) : (
             data.map((item, index) => (
-              <tr key={keyExtractor(item)} className="hover:bg-sbk-slate-50 transition-colors">
+              <tr key={keyExtractor(item)} className="hover:bg-blue-50 transition-colors">
                 {columns.map((col, i) => (
                   <td key={i} className={`px-6 py-4 ${col.className || ''}`}>
                     {col.render(item, index)}
