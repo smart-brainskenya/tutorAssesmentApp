@@ -10,11 +10,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: 'bg-sbk-blue text-white hover:bg-sbk-teal focus:ring-sbk-blue transition-colors duration-200',
-      secondary: 'bg-sbk-slate-800 text-white hover:bg-sbk-slate-900 focus:ring-sbk-slate-700 transition-colors duration-200',
-      outline: 'border border-sbk-slate-300 bg-transparent hover:bg-sbk-slate-50 text-sbk-slate-700 focus:ring-sbk-slate-500 transition-colors duration-200',
-      ghost: 'bg-transparent hover:bg-sbk-slate-100 text-sbk-slate-700 focus:ring-sbk-slate-500 transition-colors duration-200',
-      danger: 'bg-sbk-red-600 text-white hover:bg-sbk-red-700 focus:ring-sbk-red-500 transition-colors duration-200',
+      primary: 'bg-sbk-blue-dark text-white hover:opacity-90 focus:ring-sbk-blue-light transition-colors duration-200 shadow-sm hover:shadow',
+      secondary: 'bg-sbk-bg-alt text-black hover:bg-sbk-slate-200 focus:ring-sbk-slate-300 transition-colors duration-200',
+      outline: 'border border-sbk-slate-300 bg-transparent hover:border-sbk-blue-light hover:text-sbk-blue-dark text-sbk-slate-700 focus:ring-sbk-blue-light transition-colors duration-200',
+      ghost: 'bg-transparent hover:bg-sbk-bg-alt text-sbk-slate-700 focus:ring-sbk-blue-light transition-colors duration-200',
+      danger: 'bg-sbk-danger text-white hover:opacity-90 focus:ring-sbk-danger transition-colors duration-200',
     };
 
     const sizes = {

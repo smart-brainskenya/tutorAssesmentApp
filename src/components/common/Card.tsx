@@ -17,12 +17,12 @@ export function Card({
   variant = 'default',
 }: CardProps) {
   const variantStyles = {
-    default: 'bg-white border border-sbk-slate-200 shadow-sm',
-    elevated: 'bg-white border border-sbk-slate-200 shadow-md',
-    flat: 'bg-sbk-slate-50 border border-sbk-slate-100',
+    default: 'bg-sbk-bg-main border border-sbk-slate-200 shadow-sm',
+    elevated: 'bg-sbk-bg-main border border-sbk-slate-200 shadow-md',
+    flat: 'bg-sbk-bg-alt border border-sbk-slate-200',
   };
 
-  const hoverStyles = hover ? 'hover:border-sbk-slate-300 hover:shadow-md transition-all' : '';
+  const hoverStyles = hover ? 'hover:border-sbk-blue-light hover:ring-2 hover:ring-sbk-blue-light hover:ring-offset-1 transition-all duration-300' : '';
   const clickableStyles = clickable ? 'cursor-pointer' : '';
 
   return (
