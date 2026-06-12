@@ -41,7 +41,7 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
                     <Link to="/dashboard" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <LayoutDashboard className="w-4 h-4" /> Dashboard
                     </Link>
-                    <Link to="/assessments" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/dashboard" state={{ initialView: 'tests' }} className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <FileText className="w-4 h-4" /> Assessments
                     </Link>
                   </>

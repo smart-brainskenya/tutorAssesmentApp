@@ -20,13 +20,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<AuthStatus>('INITIALIZING');
+
   const statusRef = useRef(status);
+  const userRef = useRef(user);
+  const profileRef = useRef(profile);
 
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const fetchProfile = useCallback(async (userId: string, isRetry = false) => {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -34,9 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (error || !data || data.is_active === false) {
-        console.error('[AuthContext] Profile error or inactive:', error?.message);
-        if (data?.is_active === false) await supabase.auth.signOut();
+      if (error || !data) {
+        // RLS propagation/race condition: retry once if first request fails
+        if (!isRetry) {
+          console.warn('[AuthContext] Profile fetch failed, retrying in 400ms...', error?.message);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          return fetchProfile(userId, true);
+        }
+
+        console.error('[AuthContext] Profile error or not found:', error?.message);
+        setProfile(null);
+        setStatus('UNAUTHENTICATED');
+      } else if (data.is_active === false) {
+        console.error('[AuthContext] Profile is inactive');
+        await supabase.auth.signOut();
         setProfile(null);
         setStatus('UNAUTHENTICATED');
       } else {
@@ -55,6 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
+      if (!isRetry) {
+        console.warn('[AuthContext] Profile fetch threw, retrying in 400ms...', err);
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return fetchProfile(userId, true);
+      }
       console.error('[AuthContext] Unexpected fetch error:', err);
       setStatus('UNAUTHENTICATED');
     }
@@ -79,9 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         if (session?.user) {
           setUser(session.user);
-          // Only fetch profile if we don't have it or if the user changed
-          // We can optimize this by checking ID, but fetchProfile handles updates
-          await fetchProfile(session.user.id);
+          
+          // Avoid duplicate fetches: only fetch if profile not loaded or user changed
+          if (!profileRef.current || profileRef.current.id !== session.user.id) {
+            await fetchProfile(session.user.id);
+          } else {
+            setStatus('AUTHENTICATED');
+          }
+        } else {
+          // No user session found: resolve immediately to prevent hanging
+          setUser(null);
+          setProfile(null);
+          setStatus('UNAUTHENTICATED');
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);

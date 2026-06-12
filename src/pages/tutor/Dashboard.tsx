@@ -61,6 +61,13 @@ export default function Dashboard() {
     if (profile) fetchData();
   }, [profile]);
 
+  useEffect(() => {
+    const stateView = (location.state as LocationState)?.initialView;
+    if (stateView) {
+      setView(stateView);
+    }
+  }, [location.state]);
+
   const getLastAttempt = (categoryId: string) => {
     return attempts
       .filter(a => a.category_id === categoryId)
