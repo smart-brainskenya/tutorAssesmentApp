@@ -4,6 +4,10 @@
 
 @layer base {
   body {
-    @apply bg-sbk-slate-50 text-sbk-slate-900;
+    @apply bg-sbk-bg-main text-black font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-sbk-blue-dark;
   }
 }
