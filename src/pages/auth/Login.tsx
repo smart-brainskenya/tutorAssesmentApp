@@ -38,20 +38,33 @@ export default function Login() {
       }
 
       // Fetch profile to determine role-based redirect
-      const { data: profile, error: profileError } = await supabase
+      // We implement a retry to handle the Supabase client RLS header propagation race condition
+      let profileResult = await supabase
         .from('users')
         .select('role')
         .eq('id', data.user.id)
         .single();
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
+      if (profileResult.error) {
+        console.warn('Profile fetch failed, retrying to allow auth headers to propagate...', profileResult.error.message);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        profileResult = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+      }
+
+      if (profileResult.error) {
+        console.error('Profile fetch error after retry:', profileResult.error);
         // Even if profile fetch fails, we can try to fallback to dashboard
         // or show a specific error
         setError('Session started but could not retrieve your role. Please refresh.');
         setLoading(false);
         return;
       }
+
+      const profile = profileResult.data;
 
       if (profile.role === 'admin') {
         navigate('/admin/dashboard');
