@@ -30,7 +30,7 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
                   alt="Smart Brains Kenya Logo" 
                   className="h-8 w-auto sm:h-10 transition-transform group-hover:scale-105"
                 />
-                <span className="hidden xs:inline font-bold text-lg sm:text-xl tracking-tight text-sbk-slate-900 group-hover:text-sbk-blue transition-colors">
+                <span className="hidden xs:inline font-display font-bold text-lg sm:text-xl tracking-tight text-sbk-slate-900 group-hover:text-sbk-blue-dark transition-colors">
                   SBK Tutor
                 </span>
               </Link>
@@ -38,26 +38,26 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
               <nav className="hidden md:flex space-x-4">
                 {userRole === 'tutor' && (
                   <>
-                    <Link to="/dashboard" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/dashboard" className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <LayoutDashboard className="w-4 h-4" /> Dashboard
                     </Link>
-                    <Link to="/dashboard" state={{ initialView: 'tests' }} className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/dashboard" state={{ initialView: 'tests' }} className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <FileText className="w-4 h-4" /> Assessments
                     </Link>
                   </>
                 )}
                 {userRole === 'admin' && (
                   <>
-                    <Link to="/admin/dashboard" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/admin/dashboard" className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <BarChart2 className="w-4 h-4" /> Analytics
                     </Link>
-                    <Link to="/admin/manage" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/admin/manage" className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <Settings className="w-4 h-4" /> Management
                     </Link>
-                    <Link to="/admin/tutors" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/admin/tutors" className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <LayoutDashboard className="w-4 h-4" /> Staff
                     </Link>
-                    <Link to="/admin/review" className="text-sbk-slate-600 hover:text-sbk-blue px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Link to="/admin/review" className="text-sbk-slate-600 hover:text-sbk-blue-dark px-3 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
                       <FileText className="w-4 h-4" /> Review Queue
                     </Link>
                   </>
@@ -86,7 +86,7 @@ export function Layout({ children, userRole, userName }: LayoutProps) {
         {children}
       </main>
 
-      <footer className="bg-sbk-slate-50 border-t border-sbk-slate-200 py-8">
+      <footer className="bg-sbk-bg-alt border-t border-sbk-slate-200 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-3">
             <img 
